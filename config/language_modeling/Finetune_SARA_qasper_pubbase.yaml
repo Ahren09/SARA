@@ -1,0 +1,58 @@
+## Matched SARA training from the PUBLIC Mistral base (release plan §3/§4).
+## SARA = k natural-language pieces + (n-k) compressed retrieval embeddings (trainable LoRA + projector).
+
+## data
+train_file:
+- data/reformatted/QASPER_train_split.jsonl   # document-level split; dev papers excluded (§6)
+dev_file: null
+multiple_choice_train_file: null
+max_seq_length: 2048
+retrieval_context_length: 180
+num_workers: 1
+use_rag_tuning: true
+max_train_samples: 2000
+
+## model
+chat_format: mistral
+model_name_or_path: mistralai/Mistral-7B-Instruct-v0.2   # public base (NOT the private paragraph ckpt)
+compressor_name_or_path: Salesforce/SFR-Embedding-Mistral
+output_model_name: sara_qasper_proj_lr5e4_seed42
+
+## retrieval / evidence (SARA: k=5 text, n-k=5 compressed)
+num_evidence: 5
+num_additional_evidence: 5
+chunk_size: 256
+compressor_encode_method: paragraph
+
+## train
+task_type: finetune
+use_trainer: true
+quantization: null
+workdir: .
+model_learning_rate: 2.0e-5          # LM-LoRA LR (MATCHED to Standard RAG)
+projector_learning_rate: 5.0e-4      # higher LR for the random projector (simple fix attempt)
+use_lora: true
+update_projector_only: false
+freeze_projector: false              # train the projector
+lr_scheduler_type: linear
+warmup_ratio: 0.03
+weight_decay: 0.0
+num_train_epochs: 3
+use_flash_attn: false                # flash-attn is ABI-broken here; XMistral uses SDPA
+alpha_nll: 1.0
+alpha_kl: 0.0
+kl_temperature: 1.0
+clip_grad_norm: 1.0
+seed: 42
+per_device_train_batch_size: 8
+per_device_eval_batch_size: 8
+gradient_accumulation_steps: 1       # effective batch = 8 per device (matched RAG/SARA)
+max_train_steps: 250   # IDENTICAL optimizer updates across RAG and SARA (release plan §3)
+checkpointing_steps: epoch
+
+## logging
+logging_steps: 1
+wandb_project: sara_qasper
+wandb_exp_name: sara_qasper_lora_r16_proj_seed42
+wandb_exp_note: "SARA public-base QASPER"
+use_wandb: false

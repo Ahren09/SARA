@@ -1,0 +1,78 @@
+## data
+train_file: 
+- data/reformatted/SQuADv2_train.jsonl
+- data/reformatted/QASPER_train.jsonl
+- data/reformatted/HotpotQA_train.jsonl
+- data/reformatted/NarrativeQA_train.jsonl
+- data/reformatted/QuALITY_train.jsonl
+- data/reformatted/TriviaQA_train.jsonl
+
+# - data/LongBench-qmsum_test.jsonl
+# - data/LongBench-multi_news_test.jsonl
+
+multiple_choice_train_file:
+# - data/QuALITY_multi-choice_train.jsonl
+
+
+dev_file: null
+max_seq_length: 2048
+retrieval_context_length: 180
+num_workers: 1
+use_rag_tuning: true
+max_train_samples: 10000
+
+## model
+chat_format: mistral
+compressor_name_or_path: null # Salesforce/SFR-Embedding-Mistral
+
+model_name_or_path: /workingdir/yjin328/SARA/checkpoints/paragraph/MistralNemo_1M_Paragraph_1M
+# model_name_or_path: /workingdir/yjin328/SARA/checkpoints/finetune/Mistral7B_QA_Compress
+# output_model_name: Mistral7B_QA
+output_model_name: MistralNemo_QA_Compress_Stage0
+
+## Retrieval
+num_evidence: 5
+num_additional_evidence: 5
+chunk_size: 256
+
+compressor_encode_method: paragraph
+
+
+
+## train
+task_type: finetune
+use_trainer: false
+quantization: null
+workdir: .
+model_learning_rate: 2.0e-5
+projector_learning_rate: 0.0
+use_lora: true
+update_projector_only: false
+freeze_projector: true
+lr_scheduler_type: linear
+warmup_ratio: 0.03
+weight_decay: 0.0
+num_train_epochs: 1
+use_flash_attn: true
+alpha_nll: 1.0
+alpha_kl: 0.0  # Originally 2.0
+kl_temperature: 1.0 
+clip_grad_norm: -1.0
+seed: 42
+per_device_train_batch_size: 4
+per_device_eval_batch_size: 4
+gradient_accumulation_steps: 32   ## assume there are 8 GPUs
+max_train_steps: null # Set to null for actual training
+checkpointing_steps: epoch
+
+## logging
+logging_steps: 1
+workdir: .
+wandb_project: extremerag_finetune
+wandb_exp_name: extremerag_finetune_Mistral7B
+wandb_exp_note: "Finetune Mistral7B"
+use_wandb: true
+
+# checkpointing_steps: "1000" ## string number or epoch
+
+

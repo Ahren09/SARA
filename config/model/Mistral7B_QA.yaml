@@ -1,0 +1,11 @@
+model_name_or_path: /nethome/yjin328/Workspace/RAG/SARA/checkpoints/finetune/Mistral7B_QA/
+# model_name_or_path: /workingdir/yjin328/SARA/checkpoints/finetune/Mistral7B_20M_QA/epoch_0
+
+num_evidence: 5
+num_additional_evidence: 0
+compressor_name_or_path: Salesforce/SFR-Embedding-Mistral
+repetition_penalty: 1.5
+chunk_size: 256
+incremental_retrieval: true
+retriever_name_or_path: bm25
+comment: "Mistral7B model pretrained on 20 million sentences. Then fine-tuned on all the QA datasets (SQuADv2, HotpotQA, MS_Marco, NarrativeQA, QASPER, QuALITY). We restrict the maximum number of examples used for finetuned to 10000 to prevent catastrophic forgetting or any dataset from dominating the training set. No paragraph reconstruction. "

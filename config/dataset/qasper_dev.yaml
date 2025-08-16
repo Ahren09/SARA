@@ -1,0 +1,8 @@
+dataset_name: "allenai/qasper"
+do_retrieval: true
+max_eval_samples: 231
+max_new_tokens: 64
+num_additional_evidence: 0
+split: validation
+data_file: "data/reformatted/QASPER_dev.jsonl"
+answer_format: "short_answer"

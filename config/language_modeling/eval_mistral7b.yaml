@@ -1,0 +1,26 @@
+## Model
+model_name_or_path: "mistralai/Mistral-7B-Instruct-v0.2"
+chat_format: mistral
+quantization: null
+device: cuda
+num_workers: 1
+
+## Retrieval (optional)
+retriever_name_or_path: null  # Set to "Salesforce/SFR-Embedding-Mistral" for retrieval
+embedding_model: "Salesforce/SFR-Embedding-Mistral"
+chunk_size: 256
+
+## Evidence allocation
+k: 5  # Number of evidence pieces in natural language format
+n: 10  # Total number of evidence pieces
+
+## Generation
+max_seq_length: 2048
+max_new_tokens: 512
+temperature: 0.0
+repetition_penalty: 1.0
+
+## Evaluation
+per_device_eval_batch_size: 1
+enable_progress_bar: true
+debug: false

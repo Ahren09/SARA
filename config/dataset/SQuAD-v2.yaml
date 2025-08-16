@@ -1,0 +1,11 @@
+dataset_name: "rajpurkar/squad_v2"
+do_retrieval: false  # Set to true if the context is too long and necessitates retrieval
+max_eval_samples: 1000
+max_new_tokens: 64
+num_additional_evidence: 0
+# num_evidence: 3
+split: validation  # SQuAD v2 only has train and validation splits on HuggingFace
+
+data_file: "data/reformatted/SQuADv2_validation.jsonl"
+
+answer_format: "short_answer"

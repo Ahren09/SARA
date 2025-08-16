@@ -1,0 +1,637 @@
+Metadata-Version: 2.4
+Name: sara-rag
+Version: 0.1.0
+Summary: SARA: adaptive retrieval and context compression for RAG (Standard RAG vs SARA).
+License: Apache-2.0
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: torch>=2.9
+Requires-Dist: transformers==4.57.*
+Requires-Dist: peft>=0.17
+Requires-Dist: accelerate>=1.0
+Requires-Dist: safetensors>=0.4
+Requires-Dist: tokenizers>=0.20
+Requires-Dist: llama-index>=0.11
+Requires-Dist: llama-index-embeddings-huggingface>=0.3
+Requires-Dist: llama-index-retrievers-bm25>=0.4
+Requires-Dist: sentence-transformers>=3.0
+Requires-Dist: datasets>=2.20
+Requires-Dist: numpy<2.0,>=1.23
+Requires-Dist: pandas>=2.0
+Requires-Dist: sacrebleu>=2.4
+Requires-Dist: rouge-score>=0.1
+Requires-Dist: nltk>=3.8
+Requires-Dist: tqdm>=4.66
+Requires-Dist: psutil>=5.9
+Requires-Dist: pyyaml>=6.0
+Provides-Extra: logging
+Requires-Dist: wandb>=0.17; extra == "logging"
+Dynamic: license-file
+
+# SARA: Adaptive Retrieval and Context Compression Framework
+
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
+
+SARA is a comprehensive framework for adaptive retrieval and context compression in question-answering systems. It provides unified interfaces for evidence selection, compression, and QA model integration with clear parameter specifications and modular architecture.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Core Concepts](#core-concepts)
+- [Usage Examples](#usage-examples)
+- [Training](#training)
+- [Evaluation](#evaluation)
+- [Runtime Metrics](#runtime-metrics)
+- [Data Preparation](#data-preparation)
+- [Architecture](#architecture)
+- [API Reference](#api-reference)
+- [Results and Models](#results-and-models)
+- [Contributing](#contributing)
+
+## Overview
+
+SARA implements an adaptive pipeline that intelligently allocates evidence between natural language and compressed token formats. The framework provides:
+
+- **Clear Parameter Specification**: Intuitive `k` and `n` parameters for evidence allocation
+- **Unified Interfaces**: Factory patterns for evidence selection, compression, and QA models
+- **Modular Architecture**: Separated concerns with focused, testable components
+- **Multiple Evidence Selection Strategies**: Embedding-based and CSI-based selection methods
+- **Flexible Compression**: Support for various compression methods and models
+
+## Key Features
+
+### 🎯 **Clear Parameter Specification**
+- **k**: Number of evidence pieces in natural language format
+- **n**: Total number of evidence pieces (natural language + compressed tokens)
+- **n-k**: Number of evidence pieces in compressed token format
+
+### 🔧 **Unified Evidence Selection**
+- **Embedding-based Selection**: Minimizes discrepancy between query and selected evidence
+- **CSI-based Selection**: Uses conditional self-information for novelty measurement
+- **Factory Pattern**: Easy extension with new selection strategies
+
+### 🏗️ **Modular Architecture**
+- **Evidence Selection Factory**: `src/eval/evidence_selection_factory.py`
+- **Adaptive Evidence Manager**: `src/eval/adaptive_evidence_manager.py`
+- **QA Model Factory**: Unified interface for all model types
+- **Compressor Factory**: Consistent compression interfaces
+
+### 📊 **Comprehensive Evaluation**
+- Support for multiple datasets (TriviaQA, QASPER, LongBench, etc.)
+- Multiple evaluation metrics and performance analysis
+- Sensitivity analysis and ablation studies
+
+## Installation
+
+### Prerequisites
+
+1. **Install Flash Attention**:
+```bash
+git clone https://github.com/Dao-AILab/flash-attention.git
+cd flash-attention
+pip install .
+```
+
+2. **Configure Dependencies**:
+```bash
+wandb login
+accelerate configure
+```
+
+3. **Install Requirements**:
+```bash
+pip install -r requirements.txt
+```
+
+## Quick Start
+
+### Basic Evaluation
+
+Evaluate a model on TriviaQA without retrieval augmentation:
+```bash
+CUDA_VISIBLE_DEVICES=0 python -m src.eval.run_eval \
+    --data triviaqa \
+    --model_name_or_path mistralai/mistral-7b-instruct-v0.2
+```
+
+### With Retrieval Augmentation
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python -m src.eval.run_eval \
+    --data triviaqa \
+    --model_name_or_path mistralai/mistral-7b-instruct-v0.2 \
+    --use_rag
+```
+
+### With Adaptive Evidence Allocation
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python -m src.eval.run_eval \
+    --data triviaqa \
+    --model_name_or_path mistralai/mistral-7b-instruct-v0.2 \
+    --compressor_name_or_path Salesforce/SFR-Embedding-Mistral \
+
+    --use_rag \
+    --k 3 \
+    --n 5
+```
+
+### With Runtime Metrics Tracking
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python -m src.eval.run_eval \
+    --data triviaqa \
+    --model_name_or_path mistralai/mistral-7b-instruct-v0.2 \
+    --use_rag \
+    --track_metrics
+```
+
+## Core Concepts
+
+### Evidence Formats
+
+- **Natural Language Evidence**: Evidence presented as readable text to the QA model
+- **Compressed Token Evidence**: Evidence encoded as compression tokens (e.g., `<COMPRESS>`)
+
+### Evidence Allocation
+
+The framework supports flexible evidence allocation strategies:
+
+```python
+# Mixed evidence (recommended)
+config = EvidenceFormatConfig(k=3, n=5)  # 3 natural language + 2 compressed
+
+# Only natural language evidence
+config = EvidenceFormatConfig(k=5, n=5)  # 5 natural language + 0 compressed
+
+# Only compressed token evidence
+config = EvidenceFormatConfig(k=0, n=5)  # 0 natural language + 5 compressed
+
+# Heavy compression strategy
+config = EvidenceFormatConfig(k=1, n=10)  # 1 natural language + 9 compressed
+```
+
+### Evidence Selection Strategies
+
+#### Embedding-based Novelty Selection
+Formula: `argmin ||v_q - Aggregate({Enc(v) | v ∈ V_sel ∪ {v_i}})||_2`
+
+Enriches query representation with top-1 retrieved context and minimizes discrepancy between query and selected evidence.
+
+#### CSI-based Selection
+Formula: `argmax I(v_i|V_sel)` where `I(v_i|V_sel) = -log P(v_i|V_sel)`
+
+Uses conditional self-information for novelty measurement and quantifies surprisal of new evidence given previously selected evidence.
+
+## Usage Examples
+
+### Evidence Allocation with New Parameters
+
+```bash
+# k=3 natural language evidence, n=5 total evidence (n-k=2 compressed)
+python src/eval/eval_single_round.py \
+  --k 3 \
+  --n 5 \
+  --evidence_selection embedding
+```
+
+### Evidence Selection with Factory
+
+```python
+# Embedding-based selection
+selector = EvidenceSelectionFactory.create_selector(
+    method="embedding", compressor=compressor
+)
+
+# CSI-based selection  
+selector = EvidenceSelectionFactory.create_selector(
+    method="csi", csi_model=csi_model
+)
+```
+
+### Unified QA Model Interface
+
+```python
+# Works for GPT-4o, Llama, Mistral, etc.
+qa_model = QAModelFactory.create_qa_model("gpt-4o")
+response = qa_model.generate_answer(question, evidence_allocation)
+```
+
+## Training
+
+All training and evaluation runs go through a single Python entry point,
+`src/run_sara.py`, which replaced the old `scripts/*.sh` files. Use
+`--dry-run` to preview the resolved command without executing.
+
+### Pretrain (multi-GPU, accelerate)
+
+```bash
+PYTHONPATH=. python src/run_sara.py pretrain \
+    --config config/language_modeling/pretrain.yaml \
+    --launcher accelerate --gpus 2,3,4,5 --num-processes 4 \
+    -- --max_train_samples 30000000 --index_start 20000000
+```
+
+Anything after `--` is forwarded verbatim to `src.train.train_generator`.
+
+### Paragraph stage
+
+```bash
+PYTHONPATH=. python src/run_sara.py paragraph \
+    --config config/language_modeling/Paragraph_Mistral7B.yaml --gpu 2
+```
+
+### Fine-tuning
+
+```bash
+# Mistral 7B, Stage 0
+PYTHONPATH=. python src/run_sara.py finetune \
+    --config config/language_modeling/Finetune_Stage0_Mistral7B.yaml --gpu 2
+
+# Llama-3.1-8B, Stage 2
+PYTHONPATH=. python src/run_sara.py finetune \
+    --config config/language_modeling/Finetune_Stage2_Llama-3.1-8B-Instruct.yaml --gpu 2
+
+# Mistral Nemo
+PYTHONPATH=. python src/run_sara.py finetune \
+    --config config/language_modeling/Finetune_Stage0_MistralNemo.yaml --gpu 2
+```
+
+### Reranker
+
+```bash
+PYTHONPATH=. python src/run_sara.py train-reranker \
+    --config config/language_modeling/pretrain.yaml \
+    --launcher accelerate --gpus 2 --num-processes 1 \
+    -- --model_name_or_path mistralai/mistral-7b-instruct-v0.2 \
+       --per_device_train_batch_size 48 \
+       --num_train_epochs 3 --learning_rate 1e-3 \
+       --warmup_proportion 0.05 --save_on_epoch_end --num_workers 16
+```
+
+## Evaluation
+
+### Evaluation Pipeline
+
+The evaluation code is in `src/eval/`. Key components:
+
+- **`eval_single_round.py`**: Main evaluation pipeline
+- **`adaptive_evidence_manager.py`**: Evidence allocation logic
+- **`evidence_selection_factory.py`**: Evidence selection strategies
+- **`compressor_models.py`**: Compression implementations
+- **`qa_models.py`**: QA model implementations
+
+### SARA evaluation sweeps
+
+`src/run_sara.py eval` builds a cartesian product over `--models`,
+`--retrievers`, `--datasets`, repeated `--kn K,N`, and
+`--evidence-selections`, and runs `python -m src.eval.eval_single_round` for
+each combination. Existing output `.jsonl` files are skipped (use
+`--no-skip-existing` to force re-run).
+
+```bash
+# Standard QA-Compress eval
+PYTHONPATH=. python src/run_sara.py eval \
+    --models Mistral7B_QA_Compress_Stage0_Stella \
+    --retrievers bm25 \
+    --datasets qasper,narrativeqa,triviaqa \
+    --kn 5,5 --kn 5,10 \
+    --evidence-selections self-info \
+    --repetition-penalty 1.5 --gpu 2
+
+# Sensitivity sweep over (k, n) — replaces Eval_*_Sensitivity.sh
+PYTHONPATH=. python src/run_sara.py eval \
+    --models Mistral7B_QA_Compress_Stage0 \
+    --retrievers bm25,BAAI/bge-reranker-v2-m3 \
+    --datasets qasper,quality,SQuAD-v2,narrativeqa,hotpotqa,triviaqa \
+    --kn 0,0 --kn 0,10 --kn 1,9 --kn 2,8 --kn 3,7 --kn 4,6 \
+    --kn 5,5 --kn 6,4 --kn 7,3 --kn 8,2 --kn 9,1 --kn 10,0 \
+    --evidence-selections self-info --repetition-penalty 1.5 --gpu 2
+
+# Vary k with n=k (no compression vectors)
+PYTHONPATH=. python src/run_sara.py eval \
+    --models Mistral7B \
+    --model-config config/model/Mistral7B_QA_Compress_Stage0.yaml \
+    --retrievers bm25 \
+    --datasets qasper,quality,SQuAD-v2,narrativeqa,hotpotqa,triviaqa \
+    --kn 1,1 --kn 2,2 --kn 3,3 --kn 4,4 --kn 5,5 \
+    --kn 6,6 --kn 7,7 --kn 8,8 --kn 9,9 --kn 10,10 \
+    --evidence-selections self-info --max-eval-samples 200 --gpu 2
+```
+
+Calculate metrics afterwards:
+```bash
+python src/eval/calculate_qa_performance.py
+```
+
+## Runtime Metrics
+
+SARA supports comprehensive runtime metrics tracking when enabled with the `--track_metrics` flag. These metrics help analyze model performance and resource utilization.
+
+### Available Metrics
+
+| Metric | Description | Unit |
+|--------|-------------|------|
+| `ttft_seconds` | **Time to First Token (TTFT)** - Time from request start until the model begins generating the first token. Lower is better for responsiveness. | Seconds |
+| `e2e_latency_seconds` | **End-to-End Request Latency** - Total time from request start until response completion. Includes preprocessing, generation, and postprocessing. | Seconds |
+| `tokens_per_second` | **Throughput** - Rate of token generation (output_tokens / generation_time). Higher is better for efficiency. | Tokens/Second |
+| `requests_per_second` | **Request Throughput** - Rate of request processing (1 / e2e_latency). Higher indicates better system capacity. | Requests/Second |
+| `memory_before_mb` | **CPU Memory Before** - System memory (RSS) usage before starting generation. | Megabytes |
+| `memory_after_mb` | **CPU Memory After** - System memory (RSS) usage after completing generation. | Megabytes |
+| `memory_peak_mb` | **CPU Peak Memory** - Maximum system memory usage during generation. | Megabytes |
+| `memory_delta_mb` | **CPU Memory Delta** - System memory increase during generation (memory_after - memory_before). | Megabytes |
+| `gpu_memory_before_mb` | **GPU Memory Before** - GPU memory allocated before starting generation. | Megabytes |
+| `gpu_memory_after_mb` | **GPU Memory After** - GPU memory allocated after completing generation. | Megabytes |
+| `gpu_memory_peak_mb` | **GPU Peak Memory** - Maximum GPU memory allocated during generation. | Megabytes |
+| `gpu_memory_delta_mb` | **GPU Memory Delta** - GPU memory increase during generation (gpu_after - gpu_before). | Megabytes |
+
+### Understanding the Metrics
+
+#### ⏱️ **TTFT (Time to First Token)**
+- **What it measures**: Latency from when the model receives a request until it outputs the first token
+- **Why it matters**: Critical for user experience in interactive applications
+- **Typical values**: 50ms-500ms for local models, varies with context length and model size
+- **Optimization targets**: Model loading, prompt processing, KV cache initialization
+
+#### 🔄 **End-to-End Latency**
+- **What it measures**: Complete request processing time including all overhead
+- **Components**: Input processing + TTFT + generation time + output processing
+- **Why it matters**: Overall system throughput and user experience
+- **Factors affecting latency**: Context length, generation length, model size, hardware
+
+#### 📈 **Throughput Metrics**
+- **Tokens per Second**: Raw generation speed - how fast the model produces tokens
+  - **Calculation**: `output_tokens / (e2e_latency - preprocessing_time)`
+  - **Typical values**: 20-200+ tokens/sec depending on model size and hardware
+  - **Use cases**: Comparing model efficiency, hardware optimization
+  
+- **Requests per Second**: System-level throughput including all processing overhead
+  - **Calculation**: `1 / e2e_latency_seconds`
+  - **Why it matters**: Indicates overall system capacity and scalability
+  - **Optimization targets**: Batch processing, caching, model serving optimizations
+
+#### 💾 **Memory Metrics**
+
+**CPU Memory Tracking:**
+- **Memory Before/After**: Tracks system memory (RSS) allocation changes during generation
+- **Memory Delta**: Identifies memory leaks or unexpected memory growth in system memory
+- **Peak Memory**: Helps with capacity planning and OOM prevention
+
+**GPU Memory Tracking:**
+- **GPU Memory Before/After**: Tracks GPU memory allocated by PyTorch during generation
+- **GPU Memory Delta**: Shows GPU memory consumption changes specific to model inference
+- **GPU Peak Memory**: Maximum GPU memory allocated during the generation process
+
+**Use cases for Memory Metrics:**
+  - **Memory Leak Detection**: Monitor deltas across multiple requests to identify leaks
+  - **Batch Size Optimization**: Use GPU memory tracking to optimize batch sizes without OOM errors
+  - **Model Comparison**: Compare CPU vs GPU memory efficiency across different models
+  - **Resource Planning**: Determine hardware requirements based on peak usage patterns
+  - **Multi-GPU Scaling**: Plan memory allocation across multiple GPUs
+
+### Example Output
+
+When `--track_metrics` is enabled, the evaluation results include these metrics:
+
+```json
+{
+  "id": 0,
+  "question": "What is the capital of France?",
+  "pred": "Paris",
+  "ttft_seconds": 0.125,
+  "e2e_latency_seconds": 1.847,
+  "tokens_per_second": 32.4,
+  "requests_per_second": 0.541,
+  "memory_before_mb": 2048.5,
+  "memory_after_mb": 2052.1,
+  "memory_peak_mb": 2052.1,
+  "memory_delta_mb": 3.6,
+  "gpu_memory_before_mb": 7168.2,
+  "gpu_memory_after_mb": 7189.7,
+  "gpu_memory_peak_mb": 7245.3,
+  "gpu_memory_delta_mb": 21.5
+}
+```
+
+### Performance Analysis
+
+Use these metrics to:
+
+1. **Compare Model Efficiency**: Lower TTFT, higher tokens/sec, and lower CPU/GPU memory usage indicate more efficient models
+2. **Optimize Batch Sizes**: Monitor GPU memory delta to prevent OOM errors and maximize GPU utilization
+3. **Identify Bottlenecks**: High TTFT vs. total latency ratios indicate preprocessing issues
+4. **Resource Planning**: Peak CPU/GPU memory usage and requests/sec help determine hardware requirements
+5. **Throughput Analysis**: Compare tokens/sec across models and configurations for performance optimization
+6. **Capacity Planning**: Use requests/sec to estimate system load handling capabilities
+7. **GPU Efficiency Analysis**: Compare GPU memory delta across different model sizes and quantization levels
+8. **Memory Leak Detection**: Monitor CPU and GPU memory deltas across long-running evaluations
+9. **Multi-GPU Planning**: Use GPU peak memory to plan model sharding and parallelization strategies
+10. **Regression Testing**: Track all metrics over time to detect performance regressions
+
+### Enabling Metrics Tracking
+
+Add the `--track_metrics` flag to any evaluation command:
+
+```bash
+# Basic metrics tracking
+python -m src.eval.run_eval --data triviaqa --model_name_or_path gpt-4o --track_metrics
+
+# With compression and metrics
+python -m src.eval.run_eval \
+    --data triviaqa \
+    --model_name_or_path mistralai/mistral-7b-instruct-v0.2 \
+    --compressor_name_or_path Salesforce/SFR-Embedding-Mistral \
+
+    --use_rag \
+    --k 3 --n 5 \
+    --track_metrics
+```
+
+**Note**: Metrics tracking adds minimal overhead (~1-2ms per request) and is disabled by default to ensure maximum evaluation performance.
+
+## Data Preparation
+
+### Fine-tuning Data Generation
+
+Generate fine-tuning data based on QA datasets:
+
+```bash
+python -m src.data.construct_finetuning_data_mpc --config config/language_modeling/eval.yaml --num_workers 16
+```
+
+Process data in parallel:
+```bash
+python -m src.data.construct_finetuning_data --config config/language_modeling/eval.yaml --num_workers 1 --output_dir /workingdir/yjin328/SARA/outputs
+```
+
+### Required Data
+
+- **enwiki-dec2021**: Download as pretraining data and corpus for retrieval
+- **TriviaQA**: Download from [Google Drive](https://drive.google.com/drive/folders/1lFFTklW_0HuR53hLpFdLClgfSAhXn_2f)
+- **ColBERT-v2**: Use for retrieval ([GitHub](https://github.com/stanford-futuredata/ColBERT.git))
+
+## Architecture
+
+### Core Components
+
+1. **`AdaptiveEvidenceManager`** (`src/eval/adaptive_evidence_manager.py`)
+   - Handles evidence allocation between formats
+   - Manages compression token generation
+   - Creates QA model inputs
+
+2. **`EvidenceSelectionFactory`** (`src/eval/evidence_selection_factory.py`)
+   - Factory pattern for evidence selection strategies
+   - `BaseEvidenceSelector` abstract class
+   - `EmbeddingBasedSelector` and `CSIBasedSelector` implementations
+
+3. **`QAModelFactory`** (`src/eval/qa_models.py`)
+   - Unified interface for all QA model types
+   - Consistent `generate_answer()` method
+   - Support for GPT-4o, Llama, Mistral, etc.
+
+4. **`CompressorFactory`** (`src/eval/compressor_models.py`)
+   - Unified interface for all compressor types
+   - Consistent `get_embeddings()` method
+   - Support for SFR and SentenceBERT compressors
+
+### Shared Utilities (`src/utils/`)
+
+Cross-cutting helpers used across `eval/`, `train/`, and `data/` live in `src/utils/` so each script imports the canonical version rather than redefining it locally.
+
+- **`eval_utils.prepare_retriever(args, documents, similarity_top_k=None)`** — builds a BM25 or HuggingFace retriever from a list of strings or pre-built `Document` objects. Used by `eval_single_round.py`, `eval_gsm8k.py`, `eval_code.py`, and `eval_proprietary_models.py`. Pass `similarity_top_k=args.k` to retrieve only the natural-language slice (single-round path); omit it to default to `args.n` (total evidence).
+- **`general_utils.make_json_serializable(record)`** — converts numpy arrays inside a record to JSON-safe lists. Used by all `calculate_*_performance.py` scripts.
+- **`general_utils.set_seed(seed=42, use_torch=True)`** — single canonical seeder; sets `random`, `numpy`, and (optionally) torch + cuDNN deterministic flags.
+- **`text_utils.extract_entities_and_numerics(nlp, text)`** — spaCy-based NER for ORG/PERSON/GPE/EVENT/CATEGORY plus CARDINAL/numeric matches. Used by compress-token evaluation.
+- **`data_utils.reformat_generated_results(generated_results, dataset_dict, dataset_name)`** — merges the reference `answer_reformatted` column into generated results; always re-merges from the source of truth to avoid stale data.
+
+A shared `create_adamw_optimizer` for the rag-retrieval trainers lives at `src/rag_retrieval/train/optim_utils.py`.
+
+### Evidence Allocation Flow
+
+1. **Retrieve Documents**: Get documents using retriever
+2. **Apply Selection**: Use evidence selection (if configured)
+3. **Allocate Evidence**: Split between natural language and compressed formats
+4. **Generate Prompts**: Create appropriate prompts for each format
+5. **Create QA Inputs**: Package everything for the QA model
+
+## API Reference
+
+### Evidence Format Configuration
+
+```python
+from eval.adaptive_evidence_manager import EvidenceFormatConfig
+
+config = EvidenceFormatConfig(
+    k=3,                    # Natural language evidence count
+    n=5,                    # Total evidence count
+    compression_method="sentence"
+)
+```
+
+### Evidence Selection
+
+```python
+from eval.evidence_selection_factory import EvidenceSelectionFactory
+
+# Embedding-based selection
+selector = EvidenceSelectionFactory.create_selector(
+    method="embedding", 
+    compressor=compressor
+)
+
+# CSI-based selection
+selector = EvidenceSelectionFactory.create_selector(
+    method="csi", 
+    csi_model=csi_model
+)
+```
+
+### QA Model Interface
+
+```python
+from eval.qa_models import QAModelFactory
+
+qa_model = QAModelFactory.create_qa_model(model_name, args)
+response = qa_model.generate_answer(question, evidence_allocation)
+```
+
+## Results and Models
+
+### Model Descriptions
+
+- **`Mistral7B_QA_QASPER`**: Mistral 7B model pretrained, then finetuned ONLY on QASPER
+- **`Mistral7B_20M_QA`**: No paragraph objective
+- **`Mistral7B_QA_Compress`**: Trained with compression tokens in-context (max 10,000 samples per dataset)
+- **`Mistral7B_QA_Compress_4`**: Uses 10 + 0 (text + compression token) evidence instead of 5 + 5
+- **`Llama-3.1-8B-Instruct_QA`**: Finetuned on all datasets with no compress tokens
+- **`Llama-3.1-8B-Instruct_QA_2`**: Finetuned on all datasets with 5 compress tokens (max 10,000 samples, 2 epochs)
+
+### Answer Files
+
+- `Mistral7B_QA_QASPER`: `outputs/Mistral7B_QA_QASPER/answers_Mistral7B_QA_QASPER_qasper.jsonl`
+
+### Performance Results
+
+The framework supports comprehensive evaluation with:
+- Multiple choice performance metrics
+- QA performance metrics
+- RAGAS metrics for retrieval quality
+- Sensitivity analysis for parameter tuning
+- Ablation studies for component analysis
+
+## Benefits of the Refactored Architecture
+
+### ✅ **Clarity**
+- Clear separation between natural language and compressed evidence
+- Intuitive parameter names (`k`, `n`, `n-k`) instead of confusing variables
+- Self-documenting code structure
+
+### ✅ **Modularity** 
+- Evidence allocation logic is isolated and testable
+- Easy to extend with new compression strategies
+- Clean interfaces between components
+
+### ✅ **Flexibility**
+- Can easily specify evidence counts per format
+- Support for different compression methods
+- Configurable evidence selection strategies
+
+### ✅ **Maintainability**
+- Cross-cutting helpers (`prepare_retriever`, `make_json_serializable`, `extract_entities_and_numerics`, `reformat_generated_results`, `set_seed`) consolidated in `src/utils/` — each is defined once and imported everywhere it's used
+- Clear separation of concerns
+- Comprehensive error handling and validation
+
+### ✅ **Backward Compatibility**
+- All existing argument combinations still work
+- Legacy field names preserved in output
+- No breaking changes to existing workflows
+
+## Contributing
+
+The modular design enables easy contributions:
+- Support for new compression strategies
+- Dynamic evidence allocation based on question complexity
+- Integration with advanced retrieval methods
+- Performance optimizations for large-scale evaluation
+
+## Testing
+
+The refactored pipeline has been thoroughly tested to ensure:
+- ✅ All components initialize correctly
+- ✅ Evidence allocation works as expected  
+- ✅ QA model inputs are generated properly
+- ✅ Backward compatibility is maintained
+- ✅ Error handling works correctly
+
+All tests pass successfully:
+- ✓ Evidence format configuration with k and n parameters
+- ✓ Evidence allocation between natural language and compressed formats
+- ✓ Evidence selection factory with embedding and CSI methods
+- ✓ QA model factory interface
+- ✓ Compressor factory interface
+- ✓ Parameter specification validation

@@ -1,0 +1,12 @@
+# Untrained public-base SARA adapter — for pipeline smoke-testing ONLY (random projector/LoRA).
+model_name_or_path: outputs/checkpoints/sara_pubbase_untrained
+compressor_name_or_path: Salesforce/SFR-Embedding-Mistral
+retriever_name_or_path: bm25
+num_evidence: 5
+num_additional_evidence: 5
+chunk_size: 256
+repetition_penalty: 1.5
+length_penalty: 1.0
+incremental_retrieval: false
+compressor_encode_method: paragraph
+comment: "Untrained public-base adapter for end-to-end eval plumbing validation."

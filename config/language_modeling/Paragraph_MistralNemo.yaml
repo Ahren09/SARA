@@ -1,0 +1,55 @@
+## data
+train_file: /workingdir/yjin328/data/RAG/atlas_data/enwiki-dec2021/corpora/wiki/enwiki-dec2021/train.jsonl
+dev_file: /workingdir/yjin328/data/RAG/atlas_data/enwiki-dec2021/corpora/wiki/enwiki-dec2021/dev.jsonl
+max_seq_length: 1536
+retrieval_context_length: 180
+num_workers: 16
+index_start: 0
+max_train_samples: 1000000
+max_eval_samples: 1000
+
+## model
+chat_format: mistral
+compressor_name_or_path: Salesforce/SFR-Embedding-Mistral
+model_name_or_path: /nethome/yjin328/Workspace/RAG/SARA/checkpoints/pretrain/MistralNemo_1M
+output_model_name: MistralNemo_1M_Paragraph_1M
+model_type: instruction_following
+
+## train
+workdir: .
+num_train_epochs: 1
+
+projector_learning_rate: 5.0e-4
+model_learning_rate: 2.0e-5
+update_projector_only: false
+freeze_projector: false
+use_lora: true
+
+
+lr_scheduler_type: linear
+warmup_ratio: 0.03
+weight_decay: 0.0
+num_train_epochs: 1
+use_flash_attn: true
+alpha_nll: 1.0
+alpha_kl: 0.0
+clip_grad_norm: -1.0
+seed: 42
+per_device_train_batch_size: 8
+per_device_eval_batch_size: 8
+gradient_accumulation_steps: 8 ## assume there are 8 GPUs, so the total batch size is 384
+task_type: paragraph
+use_wandb: true
+
+## logging
+logging_steps: 10
+wandb_project: paragraph
+wandb_exp_name: wikipedia_paragraph_mistral7b
+wandb_entity: yjin328
+
+wandb_exp_note: "Paragraph reconstruction mistral-7b-instruct-v0.2 on Wikipedia."
+
+checkpointing_steps: "epoch" ## string number or epoch
+eval_steps: 2000000
+
+

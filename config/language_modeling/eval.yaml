@@ -1,0 +1,25 @@
+eval_file:
+  - /workingdir/yjin328/SARA/data/ms_marco_v2.1_val.jsonl
+eval_metrics:
+  - substring_match
+  - fact_checking_acc
+  - truthfulqa_f1_rl
+
+use_flash_attn: true
+task_type: eval
+format: pretrain
+
+max_eval_samples: 200
+retrieval_context_length: 180
+num_workers: 1
+use_wandb: false
+per_device_eval_batch_size: 16
+num_compressed_sentences: 1
+device: cuda
+
+workdir: .
+wandb_project: SARA_eval
+wandb_exp_name: eval_compress_token
+wandb_entity: yjin328
+wandb_exp_note: "Eval"
+

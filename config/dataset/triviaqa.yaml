@@ -1,0 +1,10 @@
+dataset_name: "triviaqa"
+do_retrieval: true
+max_eval_samples: 200
+max_new_tokens: 64
+num_additional_evidence: 0
+# num_evidence: 5
+split: dev
+
+data_file: "data/reformatted/TriviaQA_train.jsonl"
+answer_format: "short_answer"

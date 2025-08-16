@@ -1,0 +1,7 @@
+dataset_name: "code-rag-bench/humaneval"
+task_type: eval
+do_retrieval: false
+max_eval_samples: 164
+max_new_tokens: 512
+split: train
+answer_format: "code"

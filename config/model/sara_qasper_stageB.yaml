@@ -1,0 +1,12 @@
+# SARA adapter with Stage-B-aligned projector (LoRA + warmed projector) from public Mistral base.
+model_name_or_path: checkpoints/finetune/sara_qasper_lora_r16_proj_stageB_seed42
+compressor_name_or_path: Salesforce/SFR-Embedding-Mistral
+retriever_name_or_path: bm25
+num_evidence: 5
+num_additional_evidence: 5
+chunk_size: 256
+repetition_penalty: 1.5
+length_penalty: 1.0
+incremental_retrieval: false
+compressor_encode_method: paragraph
+comment: "SARA + Stage B projector alignment (k=5 text + 5 compressed)."

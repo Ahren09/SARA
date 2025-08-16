@@ -1,0 +1,10 @@
+dataset_name: "Ahren09/hotpotqa"
+do_retrieval: true
+max_eval_samples: 200
+max_new_tokens: 64
+num_additional_evidence: 0
+# num_evidence: 5
+split: validation  # NarrativeQA has 3 splits: train, validation, test
+
+data_file: "data/reformatted/HotpotQA_validation.jsonl"
+answer_format: "short_answer"

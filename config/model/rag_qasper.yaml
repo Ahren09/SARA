@@ -1,0 +1,12 @@
+# Trained Standard RAG adapter (LoRA only) from the SAME public Mistral base.
+model_name_or_path: checkpoints/finetune/rag_qasper_lora_r16_seed42
+compressor_name_or_path: null
+retriever_name_or_path: bm25
+num_evidence: 10
+num_additional_evidence: 0
+chunk_size: 256
+repetition_penalty: 1.5
+length_penalty: 1.0
+incremental_retrieval: false
+compressor_encode_method: paragraph
+comment: "Standard RAG public-base QASPER (n=10 text)."

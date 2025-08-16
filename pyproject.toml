@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sara-rag"
+version = "0.1.0"
+description = "SARA: adaptive retrieval and context compression for RAG (Standard RAG vs SARA)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+dependencies = [
+    "torch>=2.9",
+    "transformers==4.57.*",
+    "peft>=0.17",
+    "accelerate>=1.0",
+    "safetensors>=0.4",
+    "tokenizers>=0.20",
+    "llama-index>=0.11",
+    "llama-index-embeddings-huggingface>=0.3",
+    "llama-index-retrievers-bm25>=0.4",
+    "sentence-transformers>=3.0",
+    "datasets>=2.20",
+    "numpy>=1.23,<2.0",
+    "pandas>=2.0",
+    "sacrebleu>=2.4",
+    "rouge-score>=0.1",
+    "nltk>=3.8",
+    "tqdm>=4.66",
+    "psutil>=5.9",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+logging = ["wandb>=0.17"]
+
+# The codebase is invoked as `python -m src.<module>` (e.g. `python -m src.run_sara`).
+[tool.setuptools]
+packages = ["src"]
+
+[tool.setuptools.package-dir]
+src = "src"

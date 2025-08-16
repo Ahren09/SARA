@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description"
+        content="SARA: Selective and Adaptive Retrieval-augmented Generation with Context Compression. A hybrid RAG framework that combines natural-language snippets with semantic compression vectors for context-efficient question answering.">
+  <meta name="keywords" content="SARA, RAG, Retrieval-Augmented Generation, Context Compression, LLM, ACL 2026">
+  <meta property="og:title" content="SARA: Selective and Adaptive Retrieval-augmented Generation">
+  <meta property="og:description" content="A hybrid RAG framework that targets answer quality under fixed token budgets.">
+  <meta property="og:type" content="website">
+  <title>SARA — Selective and Adaptive Retrieval-augmented Generation with Context Compression</title>
+
+  <link rel="icon" href="./media/static/images/GeorgiaTech.png">
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" referrerpolicy="no-referrer">
+
+  <style>
+    :root {
+      --primary: #4338CA;
+      --primary-700: #3730A3;
+      --primary-50: #EEF2FF;
+      --accent: #F59E0B;
+      --accent-600: #D97706;
+      --ink: #0F172A;
+      --ink-soft: #334155;
+      --muted: #64748B;
+      --muted-light: #94A3B8;
+      --surface: #FFFFFF;
+      --tint: #F8FAFC;
+      --tint-warm: #FFFBEB;
+      --border: #E2E8F0;
+      --border-strong: #CBD5E1;
+      --code-bg: #0F172A;
+      --code-text: #E2E8F0;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 1px rgba(15, 23, 42, 0.03);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+      --shadow-lg: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-pill: 999px;
+      --maxw: 1100px;
+      --maxw-narrow: 820px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 16px;
+      line-height: 1.65;
+      color: var(--ink-soft);
+      background: var(--surface);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Google Sans', 'Inter', sans-serif;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      margin: 0;
+    }
+    h2 { font-size: 2rem; font-weight: 700; }
+    h3 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.01em; }
+    h4 { font-size: 1rem; font-weight: 600; }
+    p { margin: 0 0 1em 0; }
+    a { color: var(--primary); text-decoration: none; transition: color .15s ease; }
+    a:hover { color: var(--primary-700); }
+    code, pre { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+    /* ============ NAV ============ */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: saturate(180%) blur(12px);
+      -webkit-backdrop-filter: saturate(180%) blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Google Sans', sans-serif;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+    .nav-brand .dot {
+      width: 8px; height: 8px; border-radius: 999px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+    }
+    .nav-links { display: flex; gap: 4px; }
+    .nav-links a {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      transition: all .15s ease;
+    }
+    .nav-links a:hover { color: var(--ink); background: var(--tint); }
+    .nav-links a.active {
+      color: var(--primary);
+      background: var(--primary-50);
+    }
+
+    /* ============ HERO ============ */
+    .hero {
+      position: relative;
+      padding: 72px 24px 56px;
+      text-align: center;
+      overflow: hidden;
+      background:
+        radial-gradient(60% 60% at 50% -10%, rgba(67, 56, 202, 0.10), transparent 60%),
+        radial-gradient(40% 50% at 100% 10%, rgba(245, 158, 11, 0.10), transparent 60%),
+        var(--surface);
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(to right, rgba(15,23,42,0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(15,23,42,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: radial-gradient(ellipse at top, black 30%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse at top, black 30%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      position: relative;
+      max-width: 880px;
+      margin: 0 auto;
+    }
+    .venue-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      background: var(--primary-50);
+      color: var(--primary);
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      border: 1px solid rgba(67, 56, 202, 0.15);
+      margin-bottom: 20px;
+    }
+    .venue-badge .pulse {
+      width: 6px; height: 6px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+    }
+    .hero h1 {
+      font-size: clamp(1.6rem, 4.5vw, 3.2rem);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.12;
+      margin-bottom: 12px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      hyphens: auto;
+    }
+    .hero h1 .accent {
+      background: linear-gradient(120deg, var(--primary) 0%, #6366F1 50%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-tagline {
+      font-size: 1.1rem;
+      color: var(--muted);
+      max-width: 660px;
+      margin: 0 auto 28px;
+      line-height: 1.55;
+    }
+    .authors {
+      font-size: 1rem;
+      color: var(--ink);
+      margin-bottom: 6px;
+      line-height: 1.9;
+    }
+    .authors a { color: var(--ink); border-bottom: 1px solid transparent; transition: border-color .15s; }
+    .authors a:hover { color: var(--primary); border-bottom-color: var(--primary); }
+    .authors sup { color: var(--accent-600); font-weight: 600; }
+    .affil {
+      font-size: 0.92rem;
+      color: var(--muted);
+      margin-bottom: 22px;
+    }
+    .affil sup { color: var(--accent-600); font-weight: 600; }
+    .logos {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+    .logos img { height: 44px; opacity: 0.85; transition: opacity .15s; }
+    .logos img:hover { opacity: 1; }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 20px;
+      border-radius: var(--radius-pill);
+      font-weight: 600;
+      font-size: 0.92rem;
+      transition: all .18s ease;
+      border: 1px solid transparent;
+    }
+    .cta i { font-size: 1rem; }
+    .cta-primary {
+      background: var(--ink);
+      color: white;
+    }
+    .cta-primary:hover { background: var(--primary); color: white; transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    .cta-arxiv {
+      background: #B91C1C;
+      color: white;
+    }
+    .cta-arxiv:hover { background: #991B1B; color: white; transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    .cta-outline {
+      background: white;
+      color: var(--ink);
+      border-color: var(--border-strong);
+    }
+    .cta-outline:hover { color: var(--primary); border-color: var(--primary); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+    /* ============ SECTIONS ============ */
+    section { padding: 72px 24px; position: relative; }
+    section.alt { background: var(--tint); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .container { max-width: var(--maxw); margin: 0 auto; }
+    .container.narrow { max-width: var(--maxw-narrow); }
+    .section-eyebrow {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent-600);
+      margin-bottom: 10px;
+    }
+    .section-title {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+      letter-spacing: -0.02em;
+    }
+    .section-lede {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 640px;
+      margin-bottom: 36px;
+    }
+    .section-head { margin-bottom: 36px; }
+    .section-head.center { text-align: center; }
+    .section-head.center .section-lede { margin-left: auto; margin-right: auto; }
+
+    /* ============ ABSTRACT ============ */
+    .abstract-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--primary);
+      border-radius: var(--radius-md);
+      padding: 32px 36px;
+      box-shadow: var(--shadow-sm);
+    }
+    .abstract-card p {
+      font-size: 1.02rem;
+      line-height: 1.75;
+      color: var(--ink-soft);
+      text-align: justify;
+      margin-bottom: 0;
+    }
+
+    /* ============ HEADLINE METRICS ============ */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-top: 28px;
+    }
+    .metric {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 28px 24px;
+      text-align: center;
+      position: relative;
+      transition: all .2s ease;
+    }
+    .metric:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .metric::after {
+      content: "";
+      position: absolute;
+      bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 40px; height: 3px;
+      background: var(--accent);
+      border-radius: 3px 3px 0 0;
+    }
+    .metric .num {
+      font-family: 'Google Sans', sans-serif;
+      font-size: clamp(2.2rem, 4vw, 2.8rem);
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+    .metric .num .plus { color: var(--accent-600); margin-right: 2px; }
+    .metric .label {
+      margin-top: 10px;
+      font-size: 0.92rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .metrics-footnote {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--muted-light);
+      margin-top: 18px;
+    }
+
+    /* ============ METHOD ============ */
+    .stage {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 32px;
+      align-items: start;
+      margin-bottom: 28px;
+      padding: 32px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+    }
+    .stage-meta .stage-num {
+      display: inline-flex;
+      align-items: center; justify-content: center;
+      width: 36px; height: 36px;
+      border-radius: 999px;
+      background: var(--primary-50);
+      color: var(--primary);
+      font-family: 'Google Sans', sans-serif;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .stage-meta h3 { margin-bottom: 8px; }
+    .stage-meta .stage-sub {
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+    .stage-bullets { list-style: none; padding: 0; margin: 0; }
+    .stage-bullets li {
+      padding: 8px 0 8px 22px;
+      position: relative;
+      font-size: 0.93rem;
+      color: var(--ink-soft);
+      border-bottom: 1px dashed var(--border);
+    }
+    .stage-bullets li:last-child { border-bottom: none; }
+    .stage-bullets li::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 16px;
+      width: 6px; height: 6px;
+      background: var(--accent);
+      border-radius: 999px;
+    }
+    .stage-fig {
+      background: var(--tint);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      text-align: center;
+    }
+    .stage-fig img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+
+    /* ============ CONTRIBUTIONS ============ */
+    .contrib-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    .contrib {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 28px;
+      transition: all .2s ease;
+    }
+    .contrib:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--primary); }
+    .contrib-icon {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-sm);
+      background: var(--primary-50);
+      color: var(--primary);
+      display: inline-flex;
+      align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      margin-bottom: 16px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .contrib h3 { margin-bottom: 10px; }
+    .contrib p { font-size: 0.95rem; color: var(--muted); margin: 0; line-height: 1.6; }
+
+    /* ============ FIGURES ============ */
+    .fig-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 28px;
+      text-align: center;
+    }
+    .fig-card img { max-width: 100%; height: auto; }
+    .fig-caption {
+      margin-top: 16px;
+      font-size: 0.9rem;
+      color: var(--muted);
+      max-width: 760px;
+      margin-left: auto; margin-right: auto;
+      line-height: 1.6;
+    }
+    .fig-caption strong { color: var(--ink); font-weight: 600; }
+
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 22px;
+    }
+    .mini-stat {
+      padding: 18px;
+      text-align: center;
+      background: var(--tint-warm);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      border-radius: var(--radius-sm);
+    }
+    .mini-stat .v {
+      font-family: 'Google Sans', sans-serif;
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: var(--accent-600);
+      letter-spacing: -0.02em;
+    }
+    .mini-stat .k {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .sensitivity-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .sens-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      text-align: center;
+    }
+    .sens-item img { max-width: 100%; height: auto; }
+    .sens-item .lbl {
+      margin-top: 6px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    /* ============ COMPRESSION TAGS ============ */
+    .tag-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center; gap: 8px;
+      padding: 7px 14px;
+      border-radius: var(--radius-pill);
+      background: var(--primary-50);
+      color: var(--primary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid rgba(67,56,202,0.12);
+    }
+    .tag i { font-size: 0.78rem; }
+
+    /* ============ EXPERIMENTAL SETUP ============ */
+    .setup-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .setup-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 22px;
+      text-align: left;
+    }
+    .setup-stat .v {
+      font-family: 'Google Sans', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+    .setup-stat .k {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .dataset-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    .ds-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+    }
+    .ds-card h4 {
+      color: var(--primary);
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .ds-card .ds-list {
+      font-size: 0.88rem;
+      color: var(--ink-soft);
+      line-height: 1.7;
+    }
+
+    /* ============ BIBTEX ============ */
+    .bibtex-block {
+      background: var(--code-bg);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+    }
+    .bibtex-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      background: rgba(255,255,255,0.04);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .bibtex-dots { display: flex; gap: 6px; }
+    .bibtex-dots span {
+      width: 11px; height: 11px; border-radius: 999px;
+      background: rgba(255,255,255,0.18);
+    }
+    .bibtex-dots span:nth-child(1) { background: #FF5F57; }
+    .bibtex-dots span:nth-child(2) { background: #FEBC2E; }
+    .bibtex-dots span:nth-child(3) { background: #27C840; }
+    .bibtex-copy {
+      background: rgba(255,255,255,0.08);
+      color: var(--code-text);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: var(--radius-sm);
+      padding: 6px 12px;
+      font-size: 0.82rem;
+      font-family: inherit;
+      cursor: pointer;
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      transition: all .15s ease;
+    }
+    .bibtex-copy:hover { background: rgba(255,255,255,0.14); color: white; }
+    .bibtex-copy.copied { background: rgba(34, 197, 94, 0.2); color: #4ADE80; border-color: rgba(34, 197, 94, 0.3); }
+    .bibtex-block pre {
+      margin: 0;
+      padding: 22px 24px;
+      overflow-x: auto;
+      color: var(--code-text);
+      font-size: 0.88rem;
+      line-height: 1.7;
+    }
+
+    /* ============ FOOTER ============ */
+    footer {
+      padding: 48px 24px;
+      border-top: 1px solid var(--border);
+      background: var(--tint);
+    }
+    .footer-inner {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 18px;
+    }
+    .footer-logos { display: flex; gap: 24px; align-items: center; }
+    .footer-logos img { height: 32px; opacity: 0.65; }
+    .footer-meta {
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-align: right;
+      line-height: 1.7;
+    }
+    .footer-meta a { color: var(--muted); border-bottom: 1px dotted var(--muted-light); }
+    .footer-meta a:hover { color: var(--primary); border-bottom-color: var(--primary); }
+
+    /* ============ REVEAL ANIMATION ============ */
+    [data-reveal] {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1);
+    }
+    [data-reveal].is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      [data-reveal] { opacity: 1; transform: none; transition: none; }
+      html { scroll-behavior: auto; }
+    }
+
+    /* ============ RESPONSIVE ============ */
+    @media (max-width: 920px) {
+      .stage { grid-template-columns: 1fr; gap: 22px; }
+      .metrics-row, .contrib-grid { grid-template-columns: 1fr; }
+      .setup-row { grid-template-columns: repeat(2, 1fr); }
+      .dataset-grid { grid-template-columns: repeat(2, 1fr); }
+      .sensitivity-grid { grid-template-columns: repeat(2, 1fr); }
+      .mini-stats { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      section { padding: 56px 18px; }
+      .hero { padding: 48px 18px 36px; }
+      .hero h1 { font-size: 1.7rem; line-height: 1.18; }
+      .hero-tagline { font-size: 0.98rem; }
+      .nav-links { display: none; }
+      .nav-inner { padding: 12px 18px; }
+      .section-title { font-size: 1.5rem; }
+      h2 { font-size: 1.5rem; }
+      .stage { padding: 20px; }
+      .abstract-card { padding: 22px 20px; }
+      .abstract-card p { font-size: 0.96rem; }
+      .metric .num { font-size: 2rem; }
+      .footer-inner { flex-direction: column; align-items: flex-start; }
+      .footer-meta { text-align: left; }
+      .cta { padding: 10px 16px; font-size: 0.88rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ====================== NAV ====================== -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="nav-brand" href="#top"><span class="dot"></span>SARA</a>
+    <div class="nav-links">
+      <a href="#abstract">Abstract</a>
+      <a href="#method">Method</a>
+      <a href="#contributions">Contributions</a>
+      <a href="#results">Results</a>
+      <a href="#analysis">Analysis</a>
+      <a href="#bibtex">BibTeX</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ====================== HERO ====================== -->
+<header class="hero" id="top">
+  <div class="hero-inner">
+    <div class="venue-badge"><span class="pulse"></span>ACL 2026</div>
+    <h1>SARA: <span class="accent">Selective and Adaptive</span> Retrieval-augmented Generation with Context Compression</h1>
+    <p class="hero-tagline">A hybrid RAG framework that combines natural-language snippets with semantic compression vectors — preserving fine-grained facts while extending effective context.</p>
+
+    <div class="authors">
+      <a href="https://ahren09.github.io/">Yiqiao Jin</a><sup>1</sup>,
+      <a href="https://ksartik.github.io/">Kartik Sharma</a><sup>1</sup>,
+      <a href="https://www.linkedin.com/in/vineethrakesh/">Vineeth Rakesh</a><sup>2</sup>,
+      <a href="https://www.linkedin.com/in/ytongdou/">Yingtong Dou</a><sup>2</sup>,
+      <a href="https://www.linkedin.com/in/panmenghai/">Menghai Pan</a><sup>2</sup>,
+      <a href="https://www.linkedin.com/in/mahashwetadas/">Mahashweta Das</a><sup>2</sup>,
+      <a href="https://faculty.cc.gatech.edu/~srijan/">Srijan Kumar</a><sup>1</sup>
+    </div>
+    <div class="affil"><sup>1</sup>Georgia Institute of Technology &nbsp;·&nbsp; <sup>2</sup>Visa Research</div>
+
+    <div class="logos">
+      <img src="./media/static/images/GeorgiaTech.png" alt="Georgia Tech">
+      <img src="./media/static/images/VisaResearch.png" alt="Visa Research">
+    </div>
+
+    <div class="cta-row">
+      <a class="cta cta-primary" href="https://arxiv.org/abs/2507.05633"><i class="fas fa-file-pdf"></i>Paper</a>
+      <a class="cta cta-arxiv" href="https://arxiv.org/abs/2507.05633"><i class="fas fa-scroll"></i>arXiv</a>
+      <a class="cta cta-outline" href="https://github.com/Ahren09/SARA"><i class="fab fa-github"></i>Code</a>
+      <a class="cta cta-outline" href="#bibtex"><i class="fas fa-quote-right"></i>BibTeX</a>
+    </div>
+  </div>
+</header>
+
+<!-- ====================== ABSTRACT ====================== -->
+<section id="abstract" data-reveal>
+  <div class="container narrow">
+    <div class="section-head">
+      <span class="section-eyebrow">Abstract</span>
+      <h2 class="section-title">Hybrid RAG that balances precision and coverage</h2>
+    </div>
+    <div class="abstract-card">
+      <p>Retrieval-augmented generation (RAG) extends large language models (LLMs) with external knowledge, but it must balance limited effective context, redundant retrieved evidence, and the loss of fine-grained facts under aggressive compression. Pure compression-based approaches reduce input size but often discard fine-grained details essential for factual accuracy. We propose <strong>SARA</strong>, a hybrid RAG framework that targets answer quality under fixed token budgets by combining natural-language snippets with semantic compression vectors. SARA retains a small set of passages in text form to preserve entities and numerical values, compresses the remaining evidence into interpretable vectors for broader coverage, and uses those vectors for iterative evidence reranking. Across <strong>9 datasets</strong> and <strong>5 open-source LLMs</strong> spanning <strong>3 model families</strong> (Mistral, Llama, and Gemma), SARA consistently improves answer relevance (<strong>+17.71</strong>), answer correctness (<strong>+13.72</strong>), and semantic similarity (<strong>+15.53</strong>), demonstrating the importance of integrating textual and compressed representations for robust, context-efficient RAG.</p>
+    </div>
+
+    <div class="metrics-row">
+      <div class="metric"><div class="num"><span class="plus">+</span>17.71</div><div class="label">Answer Relevance</div></div>
+      <div class="metric"><div class="num"><span class="plus">+</span>13.72</div><div class="label">Answer Correctness</div></div>
+      <div class="metric"><div class="num"><span class="plus">+</span>15.53</div><div class="label">Semantic Similarity</div></div>
+    </div>
+    <p class="metrics-footnote">Averaged over in-domain datasets with Mistral-7B as the QA backbone.</p>
+  </div>
+</section>
+
+<!-- ====================== METHOD ====================== -->
+<section id="method" class="alt" data-reveal>
+  <div class="container">
+    <div class="section-head center">
+      <span class="section-eyebrow">Method</span>
+      <h2 class="section-title">A two-stage framework</h2>
+      <p class="section-lede">SARA learns a compressor that encodes evidence into single-token semantic vectors, then adapts the LLM to reason over a mixture of natural-language snippets and compressed contexts.</p>
+    </div>
+
+    <div class="stage">
+      <div class="stage-meta">
+        <div class="stage-num">1</div>
+        <h3>Compression Learning</h3>
+        <p class="stage-sub">A lightweight compressor (sentence encoder + MLP) is trained to fit each chunk into a single embedding-space token, recoverable by autoencoding on Wikipedia.</p>
+        <ul class="stage-bullets">
+          <li><strong>Embedding alignment</strong> — projects sentence embeddings into the LLM's input space</li>
+          <li><strong>Context reconstruction</strong> — auto-encoding objective preserves entities &amp; numerics</li>
+          <li><strong>Curriculum learning</strong> — progresses from short to long evidence chunks</li>
+        </ul>
+      </div>
+      <div class="stage-fig">
+        <img src="./media/static/images/model_pretrain.png" alt="Stage 1: Compression Learning — SARA learns to reconstruct text from compression vectors.">
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-meta">
+        <div class="stage-num">2</div>
+        <h3>Instruction-tuning &amp; Inference</h3>
+        <p class="stage-sub">SARA reasons over a mixture of compressed evidence and natural-language contexts, using compression vectors to drive iterative evidence reranking.</p>
+        <ul class="stage-bullets">
+          <li><strong>Hybrid processing</strong> — keeps top-k passages in text, compresses the rest</li>
+          <li><strong>Iterative reranking</strong> — selects contexts by query-relevance and novelty</li>
+          <li><strong>Dual signals</strong> — embedding-novelty and Conditional Self-Information (CSI)</li>
+        </ul>
+      </div>
+      <div class="stage-fig">
+        <img src="./media/static/images/model_inference.png" alt="Stage 2: Inference — SARA reasons over a mixture of compressed and natural-language contexts.">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== CONTRIBUTIONS ====================== -->
+<section id="contributions" data-reveal>
+  <div class="container">
+    <div class="section-head center">
+      <span class="section-eyebrow">Contributions</span>
+      <h2 class="section-title">Three core ideas</h2>
+    </div>
+    <div class="contrib-grid">
+      <div class="contrib">
+        <div class="contrib-icon"><i class="fas fa-compress-arrows-alt"></i></div>
+        <h3>Hybrid Compression</h3>
+        <p>Balances local precision via natural-language spans with global abstraction through compression vectors — fine-grained reasoning under strict token budgets.</p>
+      </div>
+      <div class="contrib">
+        <div class="contrib-icon"><i class="fas fa-sync-alt"></i></div>
+        <h3>Iterative Refinement</h3>
+        <p>Compression-vector-based selection dynamically reduces redundancy and prioritizes query-relevant evidence using embedding novelty and CSI scoring.</p>
+      </div>
+      <div class="contrib">
+        <div class="contrib-icon"><i class="fas fa-puzzle-piece"></i></div>
+        <h3>Model-Agnostic</h3>
+        <p>Works across 5 open-source LLMs spanning 3 families (Mistral, Llama, Gemma) and generalizes to multiple retrievers — no architectural changes required.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== RESULTS ====================== -->
+<section id="results" class="alt" data-reveal>
+  <div class="container">
+    <div class="section-head center">
+      <span class="section-eyebrow">Results</span>
+      <h2 class="section-title">Performance under strict token budgets</h2>
+      <p class="section-lede">SARA outperforms competitive RAG baselines and dedicated context-compression methods across both lexical and LLM-based metrics.</p>
+    </div>
+
+    <div class="fig-card">
+      <img src="./media/static/images/radar_context_efficiency_512.png" alt="Radar chart comparing SARA and compression-based methods at a 512-token budget.">
+      <p class="fig-caption"><strong>Context efficiency at a 512-token budget.</strong> SARA dominates compression-based methods across every dataset. The hybrid representation — natural-language plus compression vectors — yields large gains on knowledge-intensive tasks.</p>
+      <div class="mini-stats">
+        <div class="mini-stat"><div class="v">+19.4%</div><div class="k">F1 (avg)</div></div>
+        <div class="mini-stat"><div class="v">+20.8%</div><div class="k">ROUGE-L (avg)</div></div>
+        <div class="mini-stat"><div class="v">+29.0%</div><div class="k">F1 on HotpotQA</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== ANALYSIS ====================== -->
+<section id="analysis" data-reveal>
+  <div class="container">
+    <div class="section-head center">
+      <span class="section-eyebrow">Analysis</span>
+      <h2 class="section-title">Generalization, sensitivity, and compression fidelity</h2>
+    </div>
+
+    <div class="fig-card">
+      <img src="./media/static/images/generalization_base_model_llm_metrics.png" alt="Generalization across LLMs — RAG vs. SARA on LLM-based metrics for QASPER.">
+      <p class="fig-caption"><strong>Generalization across LLMs.</strong> SARA improves performance for every backbone tested — Mistral-7B, MistralNemo-12B, MistralSmall-24B, Llama-3.1-8B, Gemma3-4B. <em>7B models with SARA match the performance of 24B baselines.</em></p>
+    </div>
+
+    <div style="margin-top:36px;">
+      <h3 style="margin-bottom:6px;">Sensitivity analysis</h3>
+      <p style="color:var(--muted); font-size:.95rem; max-width:780px; margin-bottom:18px;">Holding the total context size fixed at <em>N</em>=10 and sweeping the number of natural-language passages <em>k</em>, performance peaks around <em>k</em>=7–8. Even at <em>k</em>=1, compression vectors close most of the gap to the full text setup — confirming that vectors add real signal at minimal cost.</p>
+      <div class="sensitivity-grid">
+        <div class="sens-item"><img src="./media/static/images/sensitivity_qasper.png" alt=""><div class="lbl">QASPER</div></div>
+        <div class="sens-item"><img src="./media/static/images/sensitivity_narrativeqa.png" alt=""><div class="lbl">NarrativeQA</div></div>
+        <div class="sens-item"><img src="./media/static/images/sensitivity_quality.png" alt=""><div class="lbl">QuALITY</div></div>
+        <div class="sens-item"><img src="./media/static/images/sensitivity_triviaqa.png" alt=""><div class="lbl">TriviaQA</div></div>
+        <div class="sens-item"><img src="./media/static/images/sensitivity_hotpotqa.png" alt=""><div class="lbl">HotpotQA</div></div>
+      </div>
+    </div>
+
+    <div style="margin-top:36px;">
+      <h3 style="margin-bottom:6px;">Compression fidelity</h3>
+      <p style="color:var(--muted); font-size:.95rem; max-width:780px; margin-bottom:18px;">Decoded text from a single compression token recovers a span comparable to a 3-sentence reference, capturing entities and numerical values with high fidelity.</p>
+      <div class="tag-row">
+        <span class="tag"><i class="fas fa-bullseye"></i>Semantic Fidelity</span>
+        <span class="tag"><i class="fas fa-microscope"></i>Fine-grained</span>
+        <span class="tag"><i class="fas fa-expand-arrows-alt"></i>Scalable</span>
+        <span class="tag"><i class="fas fa-bolt"></i>Parallelizable</span>
+      </div>
+      <div class="fig-card">
+        <img src="./media/static/images/num_words_from_compress_token.png" alt="Probability density of token counts for decoded vs. reference evidence.">
+        <p class="fig-caption"><strong>Compression effectiveness.</strong> Probability density of recovered token counts for decoded evidence and the reference 3-sentence budget — the decoder tracks the reference distribution closely.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== EXPERIMENTAL SETUP ====================== -->
+<section class="alt" data-reveal>
+  <div class="container">
+    <div class="section-head center">
+      <span class="section-eyebrow">Experimental Setup</span>
+      <h2 class="section-title">9 datasets · 5 LLMs · 3 model families</h2>
+    </div>
+
+    <div class="setup-row">
+      <div class="setup-stat"><div class="v">9</div><div class="k">Datasets · 4 task categories</div></div>
+      <div class="setup-stat"><div class="v">5</div><div class="k">LLMs · 4B – 24B</div></div>
+      <div class="setup-stat"><div class="v">10</div><div class="k">Contexts (7 text + 3 compressed)</div></div>
+      <div class="setup-stat"><div class="v">512<span style="font-size:1rem; color:var(--muted)">–</span>1024</div><div class="k">Token budgets</div></div>
+    </div>
+
+    <div class="dataset-grid">
+      <div class="ds-card">
+        <h4>Short QA</h4>
+        <div class="ds-list">SQuAD-v2.0</div>
+      </div>
+      <div class="ds-card">
+        <h4>Long-context QA</h4>
+        <div class="ds-list">NarrativeQA · QASPER · QuALITY · MultiFieldQA</div>
+      </div>
+      <div class="ds-card">
+        <h4>Multi-hop</h4>
+        <div class="ds-list">HotpotQA · TriviaQA · 2WikiMultihopQA</div>
+      </div>
+      <div class="ds-card">
+        <h4>Summarization</h4>
+        <div class="ds-list">QMSum</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== BIBTEX ====================== -->
+<section id="bibtex" data-reveal>
+  <div class="container narrow">
+    <div class="section-head">
+      <span class="section-eyebrow">Citation</span>
+      <h2 class="section-title">BibTeX</h2>
+    </div>
+    <div class="bibtex-block">
+      <div class="bibtex-bar">
+        <div class="bibtex-dots"><span></span><span></span><span></span></div>
+        <button class="bibtex-copy" id="copy-bibtex" type="button">
+          <i class="fas fa-copy"></i><span>Copy</span>
+        </button>
+      </div>
+<pre id="bibtex-text">@inproceedings{jin2026sara,
+    title     = {SARA: Selective and Adaptive Retrieval-augmented Generation with Context Compression},
+    author    = {Jin, Yiqiao and Sharma, Kartik and Rakesh, Vineeth and Dou, Yingtong and Pan, Menghai and Das, Mahashweta and Kumar, Srijan},
+    booktitle = {Proceedings of the Annual Meeting of the Association for Computational Linguistics (ACL)},
+    year      = {2026}
+}</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== FOOTER ====================== -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logos">
+      <img src="./media/static/images/GeorgiaTech.png" alt="Georgia Tech">
+      <img src="./media/static/images/VisaResearch.png" alt="Visa Research">
+    </div>
+    <div class="footer-meta">
+      Source code released under <a href="https://github.com/Ahren09/SARA">Apache 2.0</a>. Website content under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.<br>
+      Template inspired by <a href="https://nerfies.github.io/">Nerfies</a>. Last updated 2026-05-07.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ============ Scroll-reveal ============
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (e.isIntersecting) {
+        e.target.classList.add('is-visible');
+        revealObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -8% 0px' });
+  document.querySelectorAll('[data-reveal]').forEach((el) => revealObserver.observe(el));
+
+  // ============ Sticky-nav active section ============
+  const navLinks = document.querySelectorAll('.nav-links a');
+  const navMap = new Map();
+  navLinks.forEach((a) => {
+    const id = a.getAttribute('href').slice(1);
+    if (id) navMap.set(id, a);
+  });
+  const sectionEls = Array.from(navMap.keys())
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      const link = navMap.get(e.target.id);
+      if (!link) return;
+      if (e.isIntersecting) {
+        navLinks.forEach((l) => l.classList.remove('active'));
+        link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-40% 0px -50% 0px', threshold: 0 });
+  sectionEls.forEach((el) => sectionObserver.observe(el));
+
+  // ============ Copy BibTeX ============
+  const copyBtn = document.getElementById('copy-bibtex');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      const text = document.getElementById('bibtex-text').innerText;
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (_) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      copyBtn.classList.add('copied');
+      copyBtn.innerHTML = '<i class="fas fa-check"></i><span>Copied!</span>';
+      setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        copyBtn.innerHTML = '<i class="fas fa-copy"></i><span>Copy</span>';
+      }, 1800);
+    });
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,11 @@
+dataset_name: "THUDM/LongBench"
+subset_name: "multifieldqa_en"
+do_retrieval: true
+max_eval_samples: 200
+max_new_tokens: 128
+num_additional_evidence: 0
+# num_evidence: 5
+split: test  
+
+data_file: null
+answer_format: "short_answer"

@@ -1,0 +1,32 @@
+# SARA public release — core dependencies (Python 3.11, CUDA 12.x).
+# Install torch from the cu128 wheel index first (see README), then `pip install -r requirements.txt`.
+
+# --- core modeling ---
+torch>=2.9
+transformers==4.57.*
+peft>=0.17
+accelerate>=1.0
+safetensors>=0.4
+tokenizers>=0.20
+
+# --- retrieval / compression ---
+llama-index>=0.11
+llama-index-embeddings-huggingface>=0.3
+llama-index-retrievers-bm25>=0.4
+sentence-transformers>=3.0
+
+# --- data / metrics ---
+datasets>=2.20
+numpy>=1.23,<2.0
+pandas>=2.0
+sacrebleu>=2.4
+rouge-score>=0.1
+nltk>=3.8
+
+# --- utilities ---
+tqdm>=4.66
+psutil>=5.9
+pyyaml>=6.0
+
+# --- optional: experiment logging (set use_wandb: true) ---
+# wandb>=0.17

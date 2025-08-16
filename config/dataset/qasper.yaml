@@ -1,0 +1,11 @@
+dataset_name: "allenai/qasper"
+do_retrieval: true  # Set to true if the context is too long and necessitates retrieval
+max_eval_samples: 200
+max_new_tokens: 64
+num_additional_evidence: 0
+# num_evidence: 5
+split: test
+
+data_file: "data/reformatted/QASPER_test.jsonl"
+
+answer_format: "short_answer"

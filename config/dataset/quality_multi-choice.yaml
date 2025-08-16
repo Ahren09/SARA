@@ -1,0 +1,11 @@
+dataset_name: "emozilla/quality"
+do_retrieval: true  # `true` because the context is too long and necessitates retrieval
+max_eval_samples: 200
+max_new_tokens: 64
+# num_evidence: 5
+num_additional_evidence: 0
+split: validation  # QuALITY only has train and validation splits on HuggingFace
+
+data_file: "data/reformatted/QuALITY_validation.jsonl"
+answer_format: "multiple_choice"
+

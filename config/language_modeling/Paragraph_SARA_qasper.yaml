@@ -1,0 +1,52 @@
+## Stage B: bounded projector-alignment warm-up (release plan §4) on PUBLIC QASPER training documents.
+## Reconstructs paragraphs from compressed SFR embeddings so the projector learns the SFR->Mistral mapping
+## BEFORE the matched QA fine-tune. SARA-specific; does not touch the matched QA budget (RAG has no projector).
+
+## data
+train_file: data/reformatted/QASPER_paragraphs_train.jsonl
+dev_file: data/reformatted/QASPER_paragraphs_dev.jsonl
+max_seq_length: 1536
+retrieval_context_length: 180
+chunk_size: 256
+num_workers: 8
+index_start: 0
+max_train_samples: 22000
+max_eval_samples: 200
+
+## model
+chat_format: mistral
+compressor_name_or_path: Salesforce/SFR-Embedding-Mistral
+model_name_or_path: mistralai/Mistral-7B-Instruct-v0.2   # public base
+output_model_name: sara_qasper_align
+model_type: instruction_following
+
+## train
+task_type: paragraph
+use_trainer: false
+workdir: .
+projector_learning_rate: 5.0e-4      # higher LR for the randomly-initialized projector
+model_learning_rate: 2.0e-5
+update_projector_only: false
+freeze_projector: false
+use_lora: true
+lr_scheduler_type: linear
+warmup_ratio: 0.03
+weight_decay: 0.0
+num_train_epochs: 1
+use_flash_attn: false
+alpha_nll: 1.0
+alpha_kl: 0.0
+clip_grad_norm: 1.0
+seed: 42
+per_device_train_batch_size: 8
+per_device_eval_batch_size: 8
+gradient_accumulation_steps: 1
+max_train_steps: 600                  # bounded alignment warm-up
+checkpointing_steps: epoch
+
+## logging
+logging_steps: 20
+wandb_project: sara_qasper
+wandb_exp_name: sara_qasper_align
+wandb_exp_note: "Stage B projector alignment on public QASPER paragraphs."
+use_wandb: false

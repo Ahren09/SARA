@@ -1,0 +1,15 @@
+model_name_or_path: /nethome/yjin328/Workspace/RAG/SARA/checkpoints/finetune/Mistral7B_QA_Compress_Stage0
+# model_name_or_path: /workingdir/yjin328/SARA/checkpoints/finetune/Mistral7B_20M_QA/epoch_0
+
+num_evidence: 5
+num_additional_evidence: 0
+compressor_name_or_path: Salesforce/SFR-Embedding-Mistral
+repetition_penalty: 1.5
+chunk_size: 256
+length_penalty: 2.0
+incremental_retrieval: false
+retriever_name_or_path: bm25
+
+compressor_encode_method: paragraph
+
+comment: "Mistral7B model pretrained on 20 million sentences. Then fine-tuned on all datasets except SQuAD-v2. "

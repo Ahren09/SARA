@@ -1,0 +1,60 @@
+## data
+train_file: /workingdir/yjin328/data/RAG/atlas_data/enwiki-dec2021/corpora/wiki/enwiki-dec2021/train.jsonl
+dev_file: /workingdir/yjin328/data/RAG/atlas_data/enwiki-dec2021/corpora/wiki/enwiki-dec2021/dev.jsonl
+max_seq_length: 256
+retrieval_context_length: 96
+num_workers: 16
+max_train_samples: 1000000
+
+## model
+chat_format: mistral
+# compressor_name_or_path: Linq-AI-Research/Linq-Embed-Mistral
+# compressor_name_or_path: Alibaba-NLP/gte-Qwen2-7B-instruct 
+# compressor_name_or_path: nvidia/NV-Embed-v2  # Does not work
+compressor_name_or_path: NovaSearch/stella_en_1.5B_v5
+
+model_name_or_path: mistralai/mistral-7b-instruct-v0.2
+# output_model_name: Mistral7B_Linq-Embed-Mistral_1M
+output_model_name: Mistral7B_Stella_1M
+model_type: instruction_following
+
+## train
+workdir: .
+num_train_epochs: 1
+
+use_trainer: false
+projector_learning_rate: 5.0e-4
+model_learning_rate: 2.0e-5
+update_projector_only: true
+lr_scheduler_type: linear
+warmup_ratio: 0.03
+weight_decay: 0.0
+num_train_epochs: 1
+use_flash_attn: true
+use_lora: false
+freeze_projector: false
+
+alpha_nll: 1.0
+alpha_kl: 0.0
+clip_grad_norm: -1.0
+seed: 42
+per_device_train_batch_size: 20
+per_device_eval_batch_size: 20
+gradient_accumulation_steps: 8 ## assume there are 8 GPUs, so the total batch size is 384
+task_type: pretrain
+use_wandb: true
+chunk_size: 256
+
+
+## logging
+logging_steps: 10
+wandb_project: pretraining
+wandb_exp_name: wikipedia_pretrain_mistral7b
+wandb_entity: yjin328
+
+wandb_exp_note: "Pretraining mistral-7b-instruct-v0.2 on Wikipedia."
+
+checkpointing_steps: "epoch" ## string number or epoch
+eval_steps: 2000000
+
+

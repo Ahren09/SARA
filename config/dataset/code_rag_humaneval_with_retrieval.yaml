@@ -1,0 +1,8 @@
+dataset_name: "code-rag-bench/humaneval"
+task_type: eval
+do_retrieval: true
+max_eval_samples: 164
+max_new_tokens: 512
+split: train
+answer_format: "code"
+retriever_name_or_path: "Salesforce/SFR-Embedding-Mistral"
