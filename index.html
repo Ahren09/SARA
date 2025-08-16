@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="SARA: Selective and Adaptive Retrieval-augmented Generation with Context Compression">
+  <meta name="keywords" content="SARA, RAG, Context Compression, Retrieval-augmented Generation">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SARA: Selective and Adaptive Retrieval-augmented Generation with Context Compression</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./media/static/css/bulma.min.css">
+  <link rel="stylesheet" href="./media/static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./media/static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./media/static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./media/static/css/index.css">
+  <link rel="icon" href="./media/static/images/GeorgiaTech.png">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./media/static/js/fontawesome.all.min.js"></script>
+  <script src="./media/static/js/bulma-carousel.min.js"></script>
+  <script src="./media/static/js/bulma-slider.min.js"></script>
+  <script src="./media/static/js/index.js"></script>
+
+  <style>
+    /* Three image containers (use 25% for four, and 50% for two, etc) */
+    .imgcolumn {
+      float: left;
+      width: 50%;
+      padding: 10px
+    }
+
+    /* Clear floats after image containers */
+    .imgrow::after {
+      content: "";
+      clear: both;
+      display: table;
+    }
+
+    table.customTable {
+      width: 50%;
+      background-color: #FFFFFF;
+      border-collapse: collapse;
+      border-width: 2px;
+      border-color: rgb(214, 236, 244);
+      border-style: solid;
+      color: #000000;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    table.customTable td {
+      border-width: 2px;
+      border-color: rgb(214, 236, 244);
+      border-style: solid;
+      padding: 5px;
+      text-align: center; 
+      vertical-align: middle;
+    }
+
+    table.customTable th {
+      border-width: 2px;
+      border-color: rgb(214, 236, 244);
+      border-style: solid;
+      padding: 5px;
+    }
+    
+    table.customTable thead {
+      background-color: rgb(214, 236, 244);
+    }
+    </style>
+</head>
+<body>
+  
+  
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">SARA: Selective and Adaptive Retrieval-augmented Generation with Context Compression</h1>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">
+              <a href="#">Yiqiao Jin</a><sup>1</sup>,</span>
+            <span class="author-block">
+              <a href="#">Kartik Sharma</a><sup>1</sup>,</span>
+            <span class="author-block">
+              <a href="#">Vineeth Rakesh</a><sup>2</sup>,</span>
+            <span class="author-block">
+              <a href="#">Yingtong Dou</a><sup>2</sup>,</span>
+            <span class="author-block">
+              <a href="#">Menghai Pan</a><sup>2</sup>,</span>
+            <span class="author-block">
+              <a href="#">Mahashweta Das</a><sup>2</sup>,</span>
+            <span class="author-block">
+              <a href="#">Srijan Kumar</a><sup>1</sup>
+            </span>
+          </div>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><sup>1</sup>Georgia Institute of Technology,</span>
+            <span class="author-block"><sup>2</sup>Visa Research</span>
+          </div>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">
+              <img src="./media/static/images/GeorgiaTech.png" width="200" align="absmiddle" />
+            </span>
+            <span class="author-block">
+              <img src="./media/static/images/VisaResearch.png" width="120" align="absmiddle"/>  
+            </span>
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <!-- PDF Link. -->
+              <span class="link-block">
+                <a href="https://arxiv.org/abs/2507.05633"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                  </span>
+                  <span>Paper</span>
+                </a>
+              </span>
+              <!-- Code Link. -->
+              <span class="link-block">
+                <a href="https://github.com/Ahren09/SARA"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-github"></i>
+                  </span>
+                  <span>Code</span>
+                  </a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <!-- Abstract. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Retrieval-augmented Generation (RAG) extends large language models (LLMs) with external knowledge but faces key challenges: restricted effective context length and redundancy in retrieved documents. Pure compression-based approaches reduce input size but often discard fine-grained details essential for factual accuracy. We propose SARA, a unified RAG framework that balances local precision and global knowledge coverage under tight context budgets. SARA combines natural-language text snippets with semantic compression vectors to jointly enhance context efficiency and answer correctness. It represents contexts at two complementary levels: 1) fine-grained natural-language spans that preserve critical entities and numerical values, and 2) compact, interpretable vectors that summarize high-level semantics. An iterative evidence-selection module employs the compression vectors for dynamic reranking of contexts. Across 9 datasets and 5 open-source LLMs spanning 3 model families (Mistral, Llama, and Gemma), SARA consistently improves answer relevance (+17.71), answer correctness (+13.72), and semantic similarity (+15.53), demonstrating the importance of integrating textual and compressed representations for robust, context-efficient RAG.
+          </p>
+        </div>
+      </div>
+    </div>
+    <!--/ Abstract. -->
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <div class="columns is-centered">
+      <div class="column">
+        <div class="content">
+          <h2 class="title is-3">Overall Framework</h2>
+          <p>SARA addresses key challenges in RAG through a hybrid compression strategy that balances local precision and global knowledge coverage. The framework represents contexts at two complementary levels: fine-grained natural-language spans that preserve critical entities and numerical values, and compact, interpretable vectors that summarize high-level semantics. An iterative evidence-selection module employs compression vectors for dynamic reranking of contexts, ensuring optimal information density within strict context budgets.</p>
+          <img src="./fig/Model.pdf" class="example-image" alt="SARA Framework Overview"/>
+        </div>
+      </div>
+    </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <div class="columns is-centered">
+      <div class="column">
+        <div class="content">
+          <h2 class="title is-3">Key Contributions</h2>
+          <div class="columns">
+            <div class="column is-one-third">
+              <h4 class="title is-4">Hybrid Compression Strategy</h4>
+              <p>Balances local precision using natural language spans and global abstraction via compression vectors, enabling fine-grained reasoning and holistic understanding within strict context budgets.</p>
+            </div>
+            <div class="column is-one-third">
+              <h4 class="title is-4">Iterative Context Refinement</h4>
+              <p>Dynamic optimization of retrieved context by reducing redundancy and prioritizing query-relevant content through compression-aware reranking.</p>
+            </div>
+            <div class="column is-one-third">
+              <h4 class="title is-4">Model-Agnostic Design</h4>
+              <p>Comprehensive experiments across 5 LLMs spanning 3 model families demonstrate consistent performance improvements and strong generalization capabilities.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <div class="columns is-centered">
+      <div class="column">
+        <div class="content">
+          <h2 class="title is-3">Performance Results</h2>
+          <p>SARA consistently outperforms strong baselines across multiple evaluation metrics and datasets. Under strict context length constraints (512 and 1024 tokens), SARA improves F1 by 19.4% and ROUGE-L by 20.8% on average, with particularly significant gains on knowledge-intensive tasks like TriviaQA (+24.5%) and HotpotQA (+29.0%).</p>
+          
+          <h4 class="title is-4">Overall Performance Comparison</h4>
+          <table class="customTable">
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>F1 Score</th>
+                <th>ROUGE-L</th>
+                <th>Answer Relevance</th>
+                <th>Answer Correctness</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Standard RAG</td>
+                <td>[PLACEHOLDER]</td>
+                <td>[PLACEHOLDER]</td>
+                <td>[PLACEHOLDER]</td>
+                <td>[PLACEHOLDER]</td>
+              </tr>
+              <tr>
+                <td>LLMLingua</td>
+                <td>[PLACEHOLDER]</td>
+                <td>[PLACEHOLDER]</td>
+                <td>[PLACEHOLDER]</td>
+                <td>[PLACEHOLDER]</td>
+              </tr>
+              <tr>
+                <td>LongLLMLingua</td>
+                <td>[PLACEHOLDER]</td>
+                <td>[PLACEHOLDER]</td>
+                <td>[PLACEHOLDER]</td>
+                <td>[PLACEHOLDER]</td>
+              </tr>
+              <tr>
+                <td><strong>SARA (Ours)</strong></td>
+                <td><strong>[PLACEHOLDER]</strong></td>
+                <td><strong>[PLACEHOLDER]</strong></td>
+                <td><strong>[PLACEHOLDER]</strong></td>
+                <td><strong>[PLACEHOLDER]</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <div class="columns is-centered">
+      <div class="column">
+        <div class="content">
+          <h2 class="title is-3">Generalization Across Models</h2>
+          <p>SARA demonstrates strong generalization capabilities across different LLM architectures and sizes. The framework consistently outperforms baselines on 5 LLMs spanning 3 model families (Mistral, Llama, and Gemma), with improvements of up to +40 in Answer Relevance, +14 in Answer Correctness, and +21 in Semantic Similarity.</p>
+          <img src="./fig/generalization/generalization_base_model_llm_metrics.pdf" class="example-image" alt="Generalization across models"/>
+        </div>
+      </div>
+    </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <div class="columns is-centered">
+      <div class="column">
+        <div class="content">
+          <h2 class="title is-3">Ablation Studies</h2>
+          <p>Our ablation studies demonstrate the critical importance of each component in SARA's architecture. Removing the context reconstruction objective results in the most substantial performance drop (7-9 F1 across all datasets), confirming that learning to reconstruct full contexts from compressed vectors is essential for preserving semantic integrity.</p>
+          <img src="./fig/ablation/ablations_F1Score.pdf" class="example-image" alt="Ablation study results"/>
+        </div>
+      </div>
+    </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <div class="columns is-centered">
+      <div class="column">
+        <div class="content">
+          <h2 class="title is-3">Sensitivity Analysis</h2>
+          <p>SARA's hybrid approach effectively balances natural language and compressed contexts. Performance remains strong even with minimal natural language input, indicating that compression vectors retain essential information. The optimal balance is achieved around 7-8 natural language contexts, demonstrating the effectiveness of our hybrid strategy.</p>
+          <div class="columns">
+            <div class="column is-one-fifth">
+              <img src="./fig/sensitivity/sensitivity_qasper.pdf" class="example-image" alt="QASPER sensitivity"/>
+            </div>
+            <div class="column is-one-fifth">
+              <img src="./fig/sensitivity/sensitivity_narrativeqa.pdf" class="example-image" alt="NarrativeQA sensitivity"/>
+            </div>
+            <div class="column is-one-fifth">
+              <img src="./fig/sensitivity/sensitivity_quality.pdf" class="example-image" alt="QuALITY sensitivity"/>
+            </div>
+            <div class="column is-one-fifth">
+              <img src="./fig/sensitivity/sensitivity_triviaqa.pdf" class="example-image" alt="TriviaQA sensitivity"/>
+            </div>
+            <div class="column is-one-fifth">
+              <img src="./fig/sensitivity/sensitivity_hotpotqa.pdf" class="example-image" alt="HotpotQA sensitivity"/>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <div class="columns is-centered">
+      <div class="column">
+        <div class="content">
+          <h2 class="title is-3">Context Compression Analysis</h2>
+          <p>SARA's compression vectors effectively encode detailed information while significantly reducing input length. The framework demonstrates the ability to preserve fine-grained content such as exact organization names, academic terms, and numeric values, even under tight context budgets.</p>
+          <img src="./fig/num_words_from_compress_token.pdf" class="example-image" alt="Compression analysis"/>
+        </div>
+      </div>
+    </div>
+</section>
+
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>@article{jin2025sara,
+    title={SARA: Selective and Adaptive Retrieval-augmented Generation with Context Compression},
+    author={Jin, Yiqiao and Sharma, Kartik and Rakesh, Vineeth and Dou, Yingtong and Pan, Menghai and Das, Mahashweta and Kumar, Srijan},
+    journal={arXiv:2507.05633},
+    year={2025}
+    }
+}</code></pre>
+  </div>
+</section>
+
+
+<section class="section" id="Acknowledgement">
+  <div class="container is-max-desktop content">
+    <h2 class="title">Usage and License Notices</h2>
+    <p>
+      The data, code and model checkpoint are intended and licensed for research use only. Please do not use them for any malicious purposes.
+    </p>
+    <p>
+      This website is licensed under a <a rel="license"
+                                          href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+      Commons Attribution-ShareAlike 4.0 International License</a>.
+    </p>
+    <p>
+      This source code of this website is borrowed from <a
+        href="https://github.com/nerfies/nerfies.github.io">Nerfies</a>.
+    </p>
+  </div>
+</section>
+
+</body>
+</html>
