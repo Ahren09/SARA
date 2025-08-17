@@ -80,6 +80,86 @@
       max-width: 100%;
       height: auto;
     }
+
+    .feature-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 15px;
+      padding: 30px 20px;
+      text-align: center;
+      color: white;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+      height: 100%;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .feature-icon {
+      font-size: 3rem;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    .methodology-step {
+      background: white;
+      border-left: 5px solid #667eea;
+      padding: 25px;
+      margin: 20px 0;
+      border-radius: 0 10px 10px 0;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+
+    .metric-card {
+      background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    .metric-number {
+      font-size: 2.5rem;
+      font-weight: bold;
+      display: block;
+    }
+
+    .metric-label {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    .highlight-box {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+      text-align: center;
+    }
+
+    .dataset-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .dataset-card {
+      background: #f8f9ff;
+      border: 2px solid #e0e7ff;
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .dataset-card:hover {
+      border-color: #667eea;
+      transform: scale(1.02);
+    }
     </style>
 </head>
 <body>
@@ -182,19 +262,41 @@
           <h2 class="title is-3">Overall Framework</h2>
           <p>SARA addresses key challenges in RAG through a hybrid compression strategy that balances local precision and global knowledge coverage. The framework operates through a two-stage training procedure:</p>
           
-          <h4 class="title is-4">Stage 1: Compression Learning</h4>
-          <ul>
-            <li><strong>Embedding Alignment:</strong> A lightweight compressor (sentence embedding model + MLP) is trained via an autoencoding task to align sentence embeddings with the LLM's token space</li>
-            <li><strong>Context Reconstruction:</strong> The model learns to reconstruct original contexts from compression vectors, preserving semantic fidelity while dramatically reducing token usage</li>
-            <li><strong>Curriculum Learning:</strong> Training stability is improved through progressive learning on increasingly complex text chunks</li>
-          </ul>
+          <div class="methodology-step">
+            <h4 class="title is-4">🎯 Stage 1: Compression Learning</h4>
+            <div class="columns">
+              <div class="column">
+                <strong>📍 Embedding Alignment</strong><br>
+                Lightweight compressor aligns embeddings with LLM token space
+              </div>
+              <div class="column">
+                <strong>🔄 Context Reconstruction</strong><br>
+                Learns to reconstruct original contexts from vectors
+              </div>
+              <div class="column">
+                <strong>📚 Curriculum Learning</strong><br>
+                Progressive training on complex text chunks
+              </div>
+            </div>
+          </div>
 
-          <h4 class="title is-4">Stage 2: Instruction-tuning and Inference</h4>
-          <ul>
-            <li><strong>Hybrid Processing:</strong> Top-k passages are retained in natural language format while remaining contexts are compressed into vectors</li>
-            <li><strong>Dynamic Evidence Reranking:</strong> An iterative selection mechanism leverages compression vectors to optimize context relevance and diversity</li>
-            <li><strong>Dual Selection Strategies:</strong> Embedding-based novelty and Conditional Self-information (CSI) for evidence selection</li>
-          </ul>
+          <div class="methodology-step">
+            <h4 class="title is-4">⚡ Stage 2: Instruction-tuning & Inference</h4>
+            <div class="columns">
+              <div class="column">
+                <strong>🔀 Hybrid Processing</strong><br>
+                Top-k passages in natural language + compressed vectors
+              </div>
+              <div class="column">
+                <strong>🎛️ Dynamic Reranking</strong><br>
+                Iterative selection for relevance and diversity
+              </div>
+              <div class="column">
+                <strong>🎯 Dual Strategies</strong><br>
+                Embedding novelty + CSI scoring
+              </div>
+            </div>
+          </div>
 
           <p>The framework represents contexts at two complementary levels: 1) <em>fine-grained</em> natural-language spans that preserve critical entities and numerical values, and 2) <em>compact, interpretable</em> vectors that summarize high-level semantics. An iterative evidence-selection module employs compression vectors for dynamic reranking of contexts, ensuring optimal information density within strict context budgets.</p>
           
@@ -213,16 +315,25 @@
           <h2 class="title is-3">Key Contributions</h2>
           <div class="columns">
             <div class="column is-one-third">
-              <h4 class="title is-4">Hybrid Compression Strategy</h4>
-              <p>Balances <em>local precision</em> using natural language spans and <em>global abstraction</em> via compression vectors, enabling fine-grained reasoning and holistic understanding within strict context budgets. Preserves critical entities, numerical values, and organization names.</p>
+              <div class="feature-card">
+                <i class="fas fa-compress-arrows-alt feature-icon"></i>
+                <h4 class="title is-4" style="color: white;">Hybrid Compression</h4>
+                <p>Balances <strong>local precision</strong> with <strong>global abstraction</strong> for optimal context efficiency</p>
+              </div>
             </div>
             <div class="column is-one-third">
-              <h4 class="title is-4">Iterative Context Refinement</h4>
-              <p>Dynamic optimization of retrieved context through two-stage refinement: 1) coarse retrieval eliminating irrelevant documents, 2) fine-grained reranking using embedding-based novelty and conditional self-information (CSI) for diversity.</p>
+              <div class="feature-card">
+                <i class="fas fa-sync-alt feature-icon"></i>
+                <h4 class="title is-4" style="color: white;">Iterative Refinement</h4>
+                <p>Dynamic context optimization through embedding-based novelty and CSI scoring</p>
+              </div>
             </div>
             <div class="column is-one-third">
-              <h4 class="title is-4">Model-Agnostic Design</h4>
-              <p>Seamless integration with any retrievers (BM25, SFR, BGE), embedding models, and LLMs. Lightweight projection layer requires no architectural changes, enabling compatibility with future models.</p>
+              <div class="feature-card">
+                <i class="fas fa-puzzle-piece feature-icon"></i>
+                <h4 class="title is-4" style="color: white;">Model-Agnostic</h4>
+                <p>Compatible with any retrievers, embeddings, and LLMs via lightweight projection</p>
+              </div>
             </div>
           </div>
         </div>
@@ -350,24 +461,49 @@
         <div class="content">
           <h2 class="title is-3">Experimental Setup</h2>
           
-          <h4 class="title is-4">Datasets and Tasks</h4>
-          <p>We evaluate SARA across 9 diverse datasets spanning different domains and task types:</p>
-          <ul>
-            <li><strong>Short-context QA:</strong> SQuAD-v2.0</li>
-            <li><strong>Long-context QA:</strong> NarrativeQA, QASPER, QuALITY, MultifieldQA-en</li>
-            <li><strong>Multi-hop reasoning:</strong> HotpotQA, TriviaQA, 2WikiMultihopQA</li>
-            <li><strong>Summarization:</strong> QMSum</li>
-          </ul>
+          <div class="highlight-box">
+            <h4 class="title is-4">📊 9 Datasets Across 4 Task Categories</h4>
+          </div>
+          
+          <div class="dataset-grid">
+            <div class="dataset-card">
+              <h5><strong>📝 Short QA</strong></h5>
+              SQuAD-v2.0
+            </div>
+            <div class="dataset-card">
+              <h5><strong>📖 Long QA</strong></h5>
+              NarrativeQA, QASPER<br>QuALITY, MultifieldQA
+            </div>
+            <div class="dataset-card">
+              <h5><strong>🔗 Multi-hop</strong></h5>
+              HotpotQA, TriviaQA<br>2WikiMultihopQA
+            </div>
+            <div class="dataset-card">
+              <h5><strong>📋 Summarization</strong></h5>
+              QMSum
+            </div>
+          </div>
 
-          <h4 class="title is-4">Models and Components</h4>
-          <p><strong>LLMs:</strong> 5 models across 3 families - Mistral-7B, MistralNemo-12B, MistralSmall-24B, Llama-3.1-8B, Gemma3-4B</p>
-          <p><strong>Retrievers:</strong> BM25, bge-reranker-v2-m3, SFR-Embedding</p>
-          <p><strong>Context Setup:</strong> n=10 total contexts, k=7 natural language passages, 3 compressed vectors</p>
-          <p><strong>Context Constraints:</strong> 512 and 1024 tokens to evaluate performance under strict budgets</p>
-
-          <h4 class="title is-4">Evaluation Metrics</h4>
-          <p><strong>Lexical Metrics:</strong> F1 Score, ROUGE-L</p>
-          <p><strong>LLM-based Metrics:</strong> Answer Relevance, Answer Correctness, Semantic Similarity, Faithfulness</p>
+          <div class="columns">
+            <div class="column">
+              <div class="metric-card">
+                <span class="metric-number">5</span>
+                <span class="metric-label">LLMs across 3 families</span>
+              </div>
+            </div>
+            <div class="column">
+              <div class="metric-card">
+                <span class="metric-number">10</span>
+                <span class="metric-label">Total contexts (7 text + 3 compressed)</span>
+              </div>
+            </div>
+            <div class="column">
+              <div class="metric-card">
+                <span class="metric-number">512-1024</span>
+                <span class="metric-label">Token constraints</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -380,42 +516,38 @@
       <div class="column">
         <div class="content">
           <h2 class="title is-3">Generalization Across Models</h2>
-          <p>SARA demonstrates strong generalization capabilities across different LLM architectures and sizes. The framework consistently outperforms baselines on 5 LLMs spanning 3 model families (Mistral, Llama, and Gemma):</p>
+          <div class="highlight-box">
+            <h4>🚀 Consistent Improvements Across 5 LLMs</h4>
+          </div>
           
-          <ul>
-            <li><strong>Mistral-7B:</strong> +17.71 Answer Relevance, +13.72 Answer Correctness, +15.53 Semantic Similarity</li>
-            <li><strong>Mistral Family Average:</strong> +20.12 Answer Relevance, +7.07 Answer Correctness</li>
-            <li><strong>Cross-Architecture:</strong> Smaller models achieve performance matching larger ones (7B matching 24B)</li>
-            <li><strong>Architectural Alignment:</strong> Performance gains are more significant when compressor and LLM share the same architecture</li>
-          </ul>
+          <div class="columns">
+            <div class="column">
+              <div class="metric-card">
+                <span class="metric-number">+17.7</span>
+                <span class="metric-label">Answer Relevance (Mistral-7B)</span>
+              </div>
+            </div>
+            <div class="column">
+              <div class="metric-card">
+                <span class="metric-number">+13.7</span>
+                <span class="metric-label">Answer Correctness</span>
+              </div>
+            </div>
+            <div class="column">
+              <div class="metric-card">
+                <span class="metric-number">+15.5</span>
+                <span class="metric-label">Semantic Similarity</span>
+              </div>
+            </div>
+          </div>
+          
+          <p><strong>Key Insight:</strong> 7B models achieve performance matching 24B models through efficient context utilization</p>
           <img src="./media/static/images/generalization_base_model_llm_metrics.png" class="example-image" alt="Generalization across models"/>
         </div>
       </div>
     </div>
 </section>
 
-<section class="section">
-  <div class="container is-max-desktop">
-
-    <div class="columns is-centered">
-      <div class="column">
-        <div class="content">
-          <h2 class="title is-3">Ablation Studies</h2>
-          <p>Our ablation studies demonstrate the critical importance of each component in SARA's architecture:</p>
-          
-          <ul>
-            <li><strong>Context Reconstruction (SARA-P):</strong> Most critical component - removing it causes 7-9 F1 drop across all datasets</li>
-            <li><strong>Compression Vectors (SARA-C):</strong> Consistent performance declines, especially on TriviaQA (-5.6 F1) with noisy/irrelevant content</li>
-            <li><strong>Reranking (SARA-R):</strong> Modest but consistent improvements over lexical similarity-based selection</li>
-            <li><strong>Hybrid Strategy:</strong> Compression helps filter salient content and suppress redundancy, improving answer correctness</li>
-          </ul>
-
-          <p>These results confirm that learning to reconstruct full contexts from compressed vectors is essential for preserving semantic integrity and leveraging these vectors for accurate answer generation.</p>
-          <img src="./media/static/images/ablations_F1Score.png" class="example-image" alt="Ablation study results"/>
-        </div>
-      </div>
-    </div>
-</section>
 
 <section class="section">
   <div class="container is-max-desktop">
@@ -454,18 +586,37 @@
       <div class="column">
         <div class="content">
           <h2 class="title is-3">Context Compression Analysis</h2>
-          <p>SARA's compression vectors effectively encode detailed information while significantly reducing input length. The framework demonstrates the ability to preserve fine-grained content such as exact organization names, academic terms, and numeric values, even under tight context budgets.</p>
+          <div class="highlight-box">
+            <h4>🗜️ Smart Compression That Preserves Details</h4>
+            <p>Maintains entities, numbers, and organization names even under tight token budgets</p>
+          </div>
           
-          <h4 class="title is-4">Key Compression Insights</h4>
-          <ul>
-            <li><strong>Semantic Fidelity:</strong> Compression vectors preserve sufficient information for accurate context reconstruction while maintaining interpretability</li>
-            <li><strong>Fine-grained Preservation:</strong> Critical entities, numerical values, and organization names are retained even under aggressive compression</li>
-            <li><strong>Scalability:</strong> Lightweight alignment process works across different retrievers and LLMs with minimal adaptation</li>
-            <li><strong>Parallelizable Summaries:</strong> Unlike traditional methods requiring multiple passes, compression vectors serve as high-ratio, parallelizable summaries</li>
-          </ul>
-
-          <h4 class="title is-4">Compression vs. Traditional Methods</h4>
-          <p>Unlike pure compression approaches that often discard fine-grained details, SARA's hybrid strategy maintains factual anchors by retaining top-ranked passages verbatim while compressing lower-priority content. This selective approach maintains information density and significantly reduces hallucination compared to aggressive compression methods like xRAG and ICAE.</p>
+          <div class="columns">
+            <div class="column is-one-quarter">
+              <div class="methodology-step">
+                <h5>📊 Semantic Fidelity</h5>
+                <p>Accurate reconstruction while staying interpretable</p>
+              </div>
+            </div>
+            <div class="column is-one-quarter">
+              <div class="methodology-step">
+                <h5>🎯 Fine-grained</h5>
+                <p>Retains critical entities and values</p>
+              </div>
+            </div>
+            <div class="column is-one-quarter">
+              <div class="methodology-step">
+                <h5>⚡ Scalable</h5>
+                <p>Works across different retrievers and LLMs</p>
+              </div>
+            </div>
+            <div class="column is-one-quarter">
+              <div class="methodology-step">
+                <h5>🔄 Parallelizable</h5>
+                <p>High-ratio summaries in single pass</p>
+              </div>
+            </div>
+          </div>
           
           <img src="./media/static/images/num_words_from_compress_token.png" class="example-image" alt="Compression analysis"/>
         </div>
